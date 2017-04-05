@@ -1,3 +1,5 @@
+#!/bin/bash
+
 wget http://groups.ist.utl.pt/meic-cnv/project/raytracer-master.tgz
 tar xvzf raytracer-master.tgz
 cd raytracer-master
@@ -6,3 +8,5 @@ make
 cd ..
 jar cvf raytracer.jar -C raytracer-master/src .
 javac -cp raytracer.jar WebServer.java
+java_bin=$(which java)
+sudo $java_bin WebServer
