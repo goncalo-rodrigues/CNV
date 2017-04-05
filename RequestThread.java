@@ -5,6 +5,8 @@ import java.util.HashMap;
 
 import com.sun.net.httpserver.HttpExchange;
 
+import raytracer.Main;
+
 public class RequestThread implements Runnable {
   private HttpExchange t = null;
 
@@ -21,11 +23,21 @@ public class RequestThread implements Runnable {
         response += e.getKey() + "\t" + e.getValue() + "\n";
       }
       response += "###";
+
+      // Trying to call the Ray Tracer with fixed args...
+      try {
+        String[] args_rt = {"raytracer-master/test01.txt", "test01.res", "500", "500", "400", "400", "1", "1"};
+        raytracer.Main.main(args_rt);
+      } catch (InterruptedException e) {
+        // Ignoring...
+      }
+
       t.sendResponseHeaders(200, response.length());
       OutputStream os = t.getResponseBody();
       os.write(response.getBytes());
       os.close();
     } catch(IOException e) {
+      e.printStackTrace();
       throw new RuntimeException();
     }
   }

@@ -15,4 +15,4 @@ javac -cp raytracer.jar *.java
 echo
 echo "Starting WebServer..."
 java_bin=$(which java)
-sudo $java_bin WebServer
+sudo $java_bin -cp raytracer.jar:. WebServer
