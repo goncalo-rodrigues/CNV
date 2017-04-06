@@ -24,10 +24,17 @@ public class RequestThread implements Runnable {
       }
       response += "###";
 
-      // Trying to call the Ray Tracer with fixed args...
       try {
-        String[] args_rt = {"raytracer-master/test01.txt", "test01.res", "500", "500", "400", "400", "1", "1"};
-        raytracer.Main.main(args_rt);
+        if(args.containsKey("f") && args.containsKey("sc") && args.containsKey("sr") && args.containsKey("wc") &&
+                args.containsKey("wr") && args.containsKey("coff") && args.containsKey("roff")) {
+
+          String[] args_rt = {args.get("f"), "../" + args.get("f") + ".res",
+                  args.get("sc"), args.get("sr"), args.get("wc"), args.get("wr"), args.get("coff"), args.get("roff")};
+          raytracer.Main.main(args_rt);
+        }
+
+        else
+          response += "\nThere is an argument missing from the request. Please try again.";
       } catch (InterruptedException e) {
         // Ignoring...
       }
