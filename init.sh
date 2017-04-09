@@ -8,8 +8,8 @@ if [[ ${ls_res} != *"raytracer-master"* ]]; then
   mv master.zip raytracer-master.zip
   unzip raytracer-master.zip
   cd raytracer-master
-  for i in "*.txt"; do sed -i s/\\./,/g $i; done
-  for i in "*.txt"; do sed -i s/,bmp/\\.bmp/g $i; done
+  #for i in "*.txt"; do sed -i s/\\./,/g $i; done
+  #for i in "*.txt"; do sed -i s/,bmp/\\.bmp/g $i; done
   make
   cd ..
   jar cvf raytracer.jar -C raytracer-master/src .
