@@ -1,5 +1,10 @@
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -28,8 +33,11 @@ public class RequestThread implements Runnable {
         if(args.containsKey("f") && args.containsKey("sc") && args.containsKey("sr") && args.containsKey("wc") &&
                 args.containsKey("wr") && args.containsKey("coff") && args.containsKey("roff")) {
 
+          checkRequestedFile(args.get("f"));
+
           String[] args_rt = {args.get("f"), "../" + args.get("f") + ".res",
                   args.get("sc"), args.get("sr"), args.get("wc"), args.get("wr"), args.get("coff"), args.get("roff")};
+
           raytracer.Main.main(args_rt);
         }
 
@@ -37,6 +45,8 @@ public class RequestThread implements Runnable {
           response += "\nThere is an argument missing from the request. Please try again.";
       } catch (InterruptedException e) {
         // Ignoring...
+      } catch (FileNotFoundException e) {
+        response += "\nFile was not found. Please try again.";
       }
 
       t.sendResponseHeaders(200, response.length());
@@ -45,7 +55,6 @@ public class RequestThread implements Runnable {
       os.close();
     } catch(IOException e) {
       e.printStackTrace();
-      throw new RuntimeException();
     }
   }
 
@@ -63,5 +72,24 @@ public class RequestThread implements Runnable {
       }
     }
     return result;
+  }
+
+  private void checkRequestedFile(String name) throws IOException {
+    Path dir = Paths.get(".");
+
+    try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "*.txt")) {
+      boolean found = false;
+      String fileName = "./" + name;
+
+      for (Path file : stream) {
+        if(fileName.equals(file.toString())) {
+          found = true;
+          break;
+        }
+      }
+
+      if(!found)
+        throw new FileNotFoundException();
+    }
   }
 }
