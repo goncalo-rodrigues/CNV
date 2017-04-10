@@ -23,12 +23,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Enumeration;
 import java.util.Vector;
+import java.util.HashMap;
 
 public class StatisticsToolToFile
 {
-	private static int dyn_method_count = 0;
-	private static int dyn_bb_count = 0;
-	private static int dyn_instr_count = 0;
+	private static HashMap<Long, DynamicMetrics> dyn = new HashMap<Long, DynamicMetrics>();
 
 	private static int newcount = 0;
 	private static int newarraycount = 0;
@@ -184,6 +183,10 @@ public class StatisticsToolToFile
 			 */
 
 			long threadId = Thread.currentThread().getId();
+			DynamicMetrics dm = dyn.get(threadId);
+			long dyn_method_count = dm.getMethodCount();
+			long dyn_bb_count = dm.getBBCount();
+			long dyn_instr_count = dm.getInstrCount();
 
 			try{
 				PrintWriter writer = new PrintWriter("dynamic_" + threadId + ".txt", "UTF-8");
@@ -203,12 +206,13 @@ public class StatisticsToolToFile
 			 */
 
 			if (dyn_method_count == 0) {
+				dyn.remove(threadId);
 				return;
 			}
 
-			float instr_per_bb = (float) dyn_instr_count / (float) dyn_bb_count;
-			float instr_per_method = (float) dyn_instr_count / (float) dyn_method_count;
-			float bb_per_method = (float) dyn_bb_count / (float) dyn_method_count;
+			double instr_per_bb = (double) dyn_instr_count / dyn_bb_count;
+			double instr_per_method = (double) dyn_instr_count / dyn_method_count;
+			double bb_per_method = (double) dyn_bb_count / dyn_method_count;
 
 			/*
 			 *  Changed the way of outputting the information
@@ -228,21 +232,38 @@ public class StatisticsToolToFile
 				e.printStackTrace();
 			}
 
+			dyn.remove(threadId);
+
 			/*
 			 *  End of the changed instructions
 			 */
 		}
 
 
-    public static synchronized void dynInstrCount(int incr)
+    public static void dynInstrCount(int incr)
 		{
-			dyn_instr_count += incr;
-			dyn_bb_count++;
+			long threadId = Thread.currentThread().getId();
+
+			synchronized (dyn) {
+				if (!dyn.containsKey(threadId))
+					dyn.put(threadId, new DynamicMetrics());
+			}
+
+			DynamicMetrics dm = dyn.get(threadId);
+			dm.incIntrCount(incr);
+			dm.incBBCount(1);
 		}
 
-    public static synchronized void dynMethodCount(int incr)
+    public static void dynMethodCount(int incr)
 		{
-			dyn_method_count++;
+			long threadId = Thread.currentThread().getId();
+
+			synchronized (dyn) {
+				if (!dyn.containsKey(threadId))
+					dyn.put(threadId, new DynamicMetrics());
+			}
+
+			dyn.get(threadId).incMethodCount(1);
 		}
 
 	public static void doAlloc(File in_dir, File out_dir)
