@@ -7,21 +7,21 @@ if [[ ${ls_res} != *"raytracer-master"* ]]; then
   wget https://github.com/idris/raytracer/archive/master.zip
   mv master.zip raytracer-master.zip
   unzip raytracer-master.zip
+  rm raytracer-master.zip
   cd raytracer-master
   #for i in "*.txt"; do sed -i s/\\./,/g $i; done
   #for i in "*.txt"; do sed -i s/,bmp/\\.bmp/g $i; done
   make
   cd ..
-  jar cvf raytracer.jar -C raytracer-master/src .
 fi
 
 cp *.java raytracer-master
 cd raytracer-master
-javac -cp ../raytracer.jar *.java
+javac -cp /home/ec2-user/raytracer-master/src *.java
 echo
 echo "Starting WebServer..."
 java_bin=$(which java)
 log=../server.log
 sudo rm $log
-sudo $java_bin -cp ../raytracer.jar:. WebServer > >(tee -a $log) 2> >(tee -a $log >&2)
+sudo $java_bin -cp /home/ec2-user/raytracer-master/src:/home/ec2-user/BIT:/home/ec2-user/BIT/samples:. -XX:-UseSplitVerifier WebServer > >(tee -a $log) 2> >(tee -a $log >&2)
 cd ..
