@@ -170,7 +170,10 @@ public class StatisticsToolToFile
 							bb.addBefore("StatisticsToolToFile", "dynInstrCount", new Integer(bb.size()));
 						}
 					}
-					ci.addAfter("StatisticsToolToFile", "printDynamic", "null");
+
+					if(filename.equals("Main.class"))
+						ci.addAfter("StatisticsToolToFile", "printDynamic", "null");
+
 					ci.write(out_filename);
 				}
 			}
