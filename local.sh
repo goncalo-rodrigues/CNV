@@ -4,24 +4,34 @@ init_dir=$(pwd)
 
 ls_res=$(ls)
 if [[ ${ls_res} != *"raytracer-master"* ]]; then
+
+  # BIT
   wget http://grupos.tecnico.ulisboa.pt/~meic-cnv.daemon/labs/labs-bit/BIT.zip
   unzip BIT.zip
   rm BIT.zip
-  #wget http://groups.ist.utl.pt/meic-cnv/project/raytracer-master.tgz
-  #tar xvzf raytracer-master.tgz
-  wget https://github.com/idris/raytracer/archive/master.zip
-  mv master.zip raytracer-master.zip
-  unzip raytracer-master.zip
-  rm raytracer-master.zip
+
+  # Raytracer - CNV
+  wget http://groups.ist.utl.pt/meic-cnv/project/raytracer-master.tgz
+  tar xvzf raytracer-master.tgz
+  rm raytracer-master.tgz
   cd raytracer-master
   for i in "*.txt"; do sed -i s/\\./,/g $i; done
   for i in "*.txt"; do sed -i s/,bmp/\\.bmp/g $i; done
   cd ..
+
+  # Raytracer - Missing Files
+  wget https://github.com/idris/raytracer/archive/master.zip
+  unzip master.zip -d miss
+  cp miss/raytracer-master/hardwood.bmp raytracer-master
+  cp miss/raytracer-master/spectrum.bmp raytracer-master
+  rm master.zip
+  rm -rf miss
 fi
 
 clpth="$init_dir/raytracer-master/src:$init_dir/BIT:$init_dir/BIT/samples:."
 
 # Just BIT stuff
+cp $init_dir/CustomBIT/*.java $init_dir/BIT/samples
 cd "$init_dir/BIT/samples"
 javac -cp $clpth *.java
 
@@ -37,7 +47,7 @@ java -cp $clpth StatisticsToolToFile -dynamic src/raytracer/shapes/ src/raytrace
 cd $init_dir
 
 # Raytracer stuff
-cp *.java raytracer-master
+cp WebServer/*.java raytracer-master
 cd raytracer-master
 javac -cp $clpth *.java
 echo
