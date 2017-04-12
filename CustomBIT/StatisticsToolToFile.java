@@ -24,6 +24,12 @@ import java.io.PrintWriter;
 import java.util.Enumeration;
 import java.util.Vector;
 import java.util.HashMap;
+import java.math.BigInteger;
+import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class StatisticsToolToFile
 {
@@ -163,11 +169,13 @@ public class StatisticsToolToFile
 					ClassInfo ci = new ClassInfo(in_filename);
 					for (Enumeration e = ci.getRoutines().elements(); e.hasMoreElements(); ) {
 						Routine routine = (Routine) e.nextElement();
-						routine.addBefore("StatisticsToolToFile", "dynMethodCount", new Integer(1));
+
+						routine.addBefore("StatisticsToolToFile", "dynMethodCount", routine.getMethodName());
 
 						for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
 							BasicBlock bb = (BasicBlock) b.nextElement();
 							bb.addBefore("StatisticsToolToFile", "dynInstrCount", new Integer(bb.size()));
+							bb.addBefore("StatisticsToolToFile", "dynMethodBBCount", routine.getMethodName());
 						}
 					}
 
@@ -190,6 +198,7 @@ public class StatisticsToolToFile
 			long dyn_method_count = dm.getMethodCount();
 			long dyn_bb_count = dm.getBBCount();
 			long dyn_instr_count = dm.getInstrCount();
+
 
 			try{
 				PrintWriter writer = new PrintWriter("dynamic_" + threadId + ".txt", "UTF-8");
@@ -216,6 +225,16 @@ public class StatisticsToolToFile
 			double instr_per_bb = (double) dyn_instr_count / dyn_bb_count;
 			double instr_per_method = (double) dyn_instr_count / dyn_method_count;
 			double bb_per_method = (double) dyn_bb_count / dyn_method_count;
+			HashMap<String, BigInteger> method_map = dm.getMethodMap();
+			HashMap<String, BigInteger> method_bb_map = dm.getMethodBBMap();
+			List<Map.Entry<String, BigInteger>> entries = new ArrayList<Map.Entry<String, BigInteger>>(method_map.entrySet());
+
+			Collections.sort(entries, new Comparator<Map.Entry<String, BigInteger>>() {
+
+				public int compare(Map.Entry<String, BigInteger> o1, Map.Entry<String, BigInteger> o2) {
+					return o1.getValue().compareTo(o2.getValue());
+				}
+			});
 
 			/*
 			 *  Changed the way of outputting the information
@@ -229,11 +248,25 @@ public class StatisticsToolToFile
 				writer.println("Average number of instructions per basic block: " + instr_per_bb);
 				writer.println("Average number of instructions per method:      " + instr_per_method);
 				writer.println("Average number of basic blocks per method:      " + bb_per_method);
+				writer.println("Method invocations:");
+				for(Map.Entry<String, BigInteger> entry : entries) {
+					String key = entry.getKey();
+					BigInteger value = entry.getValue();
+					writer.println(String.format("%30s",key) + "\t" + String.format("%10s", value.toString()) + "\t" +
+					method_bb_map.get(key).divide(value).toString());
+
+					// do what you have to do here
+					// In your case, an other loop.
+				}
 				writer.close();
 
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+			
+			
+			
+			
 
 			dyn.remove(threadId);
 
@@ -257,7 +290,7 @@ public class StatisticsToolToFile
 			dm.incBBCount(1);
 		}
 
-    public static void dynMethodCount(int incr)
+    public static void dynMethodCount(String routineName)
 		{
 			long threadId = Thread.currentThread().getId();
 
@@ -266,8 +299,20 @@ public class StatisticsToolToFile
 					dyn.put(threadId, new DynamicMetrics());
 			}
 
-			dyn.get(threadId).incMethodCount(1);
+			dyn.get(threadId).incMethodCount(1, routineName);
 		}
+
+	public static void dynMethodBBCount(String routineName)
+	{
+		long threadId = Thread.currentThread().getId();
+
+		synchronized (dyn) {
+			if (!dyn.containsKey(threadId))
+				dyn.put(threadId, new DynamicMetrics());
+		}
+
+		dyn.get(threadId).incBBCount(1, routineName);
+	}
 
 	public static void doAlloc(File in_dir, File out_dir)
 		{
@@ -669,4 +714,6 @@ public class StatisticsToolToFile
 				}
 			}
 		}
+
+
 }
