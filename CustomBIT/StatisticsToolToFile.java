@@ -17,19 +17,18 @@
 // and modifying this software.
 
 import BIT.highBIT.*;
+import BIT.lowBIT.*;
+import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Enumeration;
-import java.util.Vector;
-import java.util.HashMap;
+import java.lang.reflect.Method;
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.util.*;
 import java.math.BigInteger;
-import java.util.Map;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 
 public class StatisticsToolToFile
 {
@@ -167,15 +166,53 @@ public class StatisticsToolToFile
 					String in_filename = in_dir.getAbsolutePath() + System.getProperty("file.separator") + filename;
 					String out_filename = out_dir.getAbsolutePath() + System.getProperty("file.separator") + filename;
 					ClassInfo ci = new ClassInfo(in_filename);
-					for (Enumeration e = ci.getRoutines().elements(); e.hasMoreElements(); ) {
+                    Cp_Info[] cpool = ci.getConstantPool();
+//                    for (Cp_Info info : cpool) {
+//                        try {
+//                            System.out.println(info.getTag());
+//                            System.out.println(info.getClass().getSimpleName());
+//                        } catch (Exception e) {
+//                            e.getStackTrace();
+//                        }
+//
+//                    }
+                    for (Enumeration e = ci.getRoutines().elements(); e.hasMoreElements(); ) {
 						Routine routine = (Routine) e.nextElement();
 
-						routine.addBefore("StatisticsToolToFile", "dynMethodCount", routine.getMethodName());
 
+                        String caller = routine.getMethodName();
+                        if (caller.equals("<init>")) {
+                            caller = (routine.getClassName() + "" + caller).replace("/", "").replace("<", "").replace(">", "");
+                        }
+						Instruction[] instructions = routine.getInstructions();
+                        routine.addBefore("StatisticsToolToFile", "dynMethodCount", caller);
 						for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
 							BasicBlock bb = (BasicBlock) b.nextElement();
-							bb.addBefore("StatisticsToolToFile", "dynInstrCount", new Integer(bb.size()));
-							bb.addBefore("StatisticsToolToFile", "dynMethodBBCount", routine.getMethodName());
+							Instruction instr = (Instruction)instructions[bb.getEndAddress()];
+
+
+							short instr_type = InstructionTable.InstructionTypeTable[instr.getOpcode()];
+//							System.out.println("inst_type = " + InstructionTable.InstructionTypeName[instr.getOpcode()]);
+							if (instr.getOpcode() == InstructionTable.invokevirtual || instr.getOpcode() == InstructionTable.invokestatic || instr.getOpcode() == InstructionTable.invokespecial) {
+//							    System.out.println(cpool[instr.getOperandValue()].getClass().getSimpleName());
+
+                                CONSTANT_Methodref_Info cminfo = ( CONSTANT_Methodref_Info) cpool[instr.getOperandValue()];
+                                CONSTANT_NameAndType_Info ntinfo = (CONSTANT_NameAndType_Info) cpool[cminfo.name_and_type_index];
+                                CONSTANT_Utf8_Info nameinfo = (CONSTANT_Utf8_Info) cpool[ntinfo.name_index];
+							    String callee = new String(nameinfo.bytes);
+                                if (callee.equals("<init>")) {
+                                    CONSTANT_Class_Info classInfo = (CONSTANT_Class_Info) cpool[cminfo.class_index];
+                                    CONSTANT_Utf8_Info classnameinfo = (CONSTANT_Utf8_Info) cpool[classInfo.name_index];
+                                    callee = new String(classnameinfo.bytes) + "" + callee;
+                                }
+
+								instr.addBefore("StatisticsToolToFile", "dynCallCount", caller + "»" + callee);
+							}
+						}
+						for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
+							BasicBlock bb = (BasicBlock) b.nextElement();
+//							bb.addBefore("StatisticsToolToFile", "dynInstrCount", new Integer(bb.size()));
+							bb.addBefore("StatisticsToolToFile", "dynMethodBBCount", caller);
 						}
 					}
 
@@ -186,6 +223,8 @@ public class StatisticsToolToFile
 				}
 			}
 		}
+
+
 
     public static synchronized void printDynamic(String foo)
 		{
@@ -243,7 +282,8 @@ public class StatisticsToolToFile
 			try{
 				PrintWriter writer = new PrintWriter(new FileOutputStream(
 						new File("dynamic_" + threadId + ".txt"), true));
-
+                PrintWriter dot_writer = new PrintWriter("dynamic_full_" + threadId + ".dot", "UTF-8");
+                PrintWriter dot_writer2 = new PrintWriter("dynamic_small_" + threadId + ".dot", "UTF-8");
 				writer.println();
 				writer.println("Average number of instructions per basic block: " + instr_per_bb);
 				writer.println("Average number of instructions per method:      " + instr_per_method);
@@ -252,13 +292,130 @@ public class StatisticsToolToFile
 				for(Map.Entry<String, BigInteger> entry : entries) {
 					String key = entry.getKey();
 					BigInteger value = entry.getValue();
-					writer.println(String.format("%30s",key) + "\t" + String.format("%10s", value.toString()) + "\t" +
-					method_bb_map.get(key).divide(value).toString());
+//                    System.out.println(key + "," + value);
+//					writer.println(String.format("%30s",key) + "\t" + String.format("%10s", value.toString()) + "\t" +
+//					String.format("%10s", method_bb_map.get(key).divide(value).toString()));
 
 					// do what you have to do here
 					// In your case, an other loop.
 				}
-				writer.close();
+
+                writer.println("Method invocations:");
+                HashMap<String, BigInteger> methodCallMap = dm.getMethodCallMap();
+                List<Map.Entry<String, BigInteger>> callEntries = new ArrayList<>(methodCallMap.entrySet());
+                Collections.sort(callEntries, new Comparator<Map.Entry<String, BigInteger>>() {
+
+                    public int compare(Map.Entry<String, BigInteger> o1, Map.Entry<String, BigInteger> o2) {
+                        return o1.getValue().compareTo(o2.getValue());
+                    }
+                });
+
+                dot_writer.println("digraph G {");
+
+                HashMap<String, MethodNode> nodes = new HashMap<>();
+                for(Map.Entry<String, BigInteger> entry : callEntries) {
+                    String callercallee = entry.getKey();
+                    String formatted = callercallee.replace("/", "").replace("<", "").replace(">", "");
+                    String[] splitted = formatted.split("»");
+                    BigInteger count = entry.getValue();
+
+
+                    String caller = splitted[0];
+                    String callee = splitted[1];
+//                    if (method_bb_map.containsKey(caller)) {
+//                        caller = caller + "_" + method_bb_map.get(caller).divide(method_map.get(caller));
+//                    }
+//                    if (method_bb_map.containsKey(callee)) {
+//                        callee = callee + "_" + method_bb_map.get(callee).divide(method_map.get(callee));
+//                    }
+                    dot_writer.println(caller + " -> " + callee + "   [label=" + count.toString()+"];");
+                    MethodNode callerNode;
+                    MethodNode calleeNode;
+                    if (!nodes.containsKey(caller)) {
+                        nodes.put(caller, new MethodNode(caller));
+                    }
+                    if (!nodes.containsKey(callee)) {
+                        nodes.put(callee, new MethodNode(callee));
+                    }
+
+                    callerNode = nodes.get(caller);
+                    calleeNode = nodes.get(callee);
+
+
+                    callerNode.addChild(calleeNode, count);
+                    calleeNode.addParent(callerNode, count);
+
+                    calleeNode.incrementTimesExecuted(count);
+
+
+
+                    // do what you have to do here
+                    // In your case, an other loop.
+                }
+
+                dot_writer2.println("digraph G {");
+                Queue<MethodNode> qNode = new ArrayDeque<>();
+                qNode.add(nodes.get("draw"));
+                List<MethodNode> visited = new ArrayList<>();
+                while (!qNode.isEmpty()) {
+                    final MethodNode tempNode = qNode.remove();
+                    List<MethodNode> children = tempNode.getTopChildren(0.8);
+                    for (MethodNode child: children) {
+                        if (!visited.contains(child)) {
+                            qNode.add(child);
+                            visited.add(child);
+                        }
+
+                        dot_writer2.println(tempNode.name + " -> " + child.name + "   [label=" + child.parents.get(tempNode).multiply(BigInteger.TEN).multiply(BigInteger.TEN).divide(tempNode.executedOthers).toString()+"];");
+                    }
+                }
+                dot_writer2.println("}");
+//                for (MethodNode node: nodes.values()) {
+//                    BigInteger currentMax = BigInteger.ZERO;
+//                    MethodNode currentParent = node;
+//                    for (Map.Entry<MethodNode, BigInteger> parent: node.parents.entrySet()) {
+//                        if (parent.getValue().compareTo(currentMax) > 0) {
+//                            currentMax = parent.getValue();
+//                            currentParent = parent.getKey();
+//                        }
+//                    }
+//
+//                    System.out.println(currentParent.name + " -> " + node.name + "   [label=" + currentMax.toString()+"];");
+//                }
+
+//                BigInteger totalUninstrumentedExecs = BigInteger.ZERO;
+//                for(MethodNode node: nodes.values()) {
+//                    if (node.children.size() == 0) {
+//                        totalUninstrumentedExecs = totalUninstrumentedExecs.add(node.timesExecuted);
+//
+//                    }
+//                }
+//                BigDecimal totalDec = new BigDecimal(totalUninstrumentedExecs);
+//                for(MethodNode node: nodes.values()) {
+//                    for(MethodNode node2: nodes.values()) {
+//                        node2.newIteration();
+//                    }
+//                    if (node.children.size() == 0) {
+//
+//                        node.visit((new BigDecimal(node.timesExecuted).divide(totalDec, MathContext.DECIMAL32)).doubleValue(), null);
+//
+//                    }
+//                }
+//
+//
+//                for(MethodNode node: nodes.values()) {
+//                    System.out.println(node.name + " " + node.value);
+//                    for (MethodNode child: node.children) {
+//                        System.out.println("child " + child.name);
+//                    }
+//                    System.out.println();
+//                }
+
+
+                dot_writer.println("}");
+                dot_writer.close();
+                dot_writer2.close();
+                writer.close();
 
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -290,6 +447,19 @@ public class StatisticsToolToFile
 			dm.incBBCount(1);
 		}
 
+    public static void dynCallCount(String info)
+    {
+        long threadId = Thread.currentThread().getId();
+
+        synchronized (dyn) {
+            if (!dyn.containsKey(threadId))
+                dyn.put(threadId, new DynamicMetrics());
+        }
+
+        DynamicMetrics dm = dyn.get(threadId);
+        dm.incCallCount(info);
+    }
+
     public static void dynMethodCount(String routineName)
 		{
 			long threadId = Thread.currentThread().getId();
@@ -311,7 +481,7 @@ public class StatisticsToolToFile
 				dyn.put(threadId, new DynamicMetrics());
 		}
 
-		dyn.get(threadId).incBBCount(1, routineName);
+		dyn.get(threadId).incBBCount(1, routineName.replace("/", "").replace("<", "").replace(">", ""));
 	}
 
 	public static void doAlloc(File in_dir, File out_dir)
@@ -643,10 +813,12 @@ public class StatisticsToolToFile
 						doDynamic(in_dir, out_dir);
 					}
 					else {
+					    System.out.println("directories invalid");
 						printUsage();
 					}
 				}
 				catch (NullPointerException e) {
+				    e.printStackTrace();
 					printUsage();
 				}
 			}

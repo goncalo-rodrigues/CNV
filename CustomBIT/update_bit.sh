@@ -2,10 +2,10 @@
 
 curr_dir=$(pwd)
 
-cd "/home/ec2-user/BIT/samples"
+cd "../BIT/samples"
 javac *.java
 
-cd "/home/ec2-user/raytracer-master"
+cd "../../WebServer/raytracer-master"
 make clean
 make
 

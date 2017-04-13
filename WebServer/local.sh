@@ -1,0 +1,50 @@
+#!/bin/bash
+
+init_dir=$(pwd)
+
+ls_res=$(ls)
+if [[ ${ls_res} != *"raytracer-master"* ]]; then
+  wget http://grupos.tecnico.ulisboa.pt/~meic-cnv.daemon/labs/labs-bit/BIT.zip
+  unzip BIT.zip
+  rm BIT.zip
+  #wget http://groups.ist.utl.pt/meic-cnv/project/raytracer-master.tgz
+  #tar xvzf raytracer-master.tgz
+  wget https://github.com/idris/raytracer/archive/master.zip
+  mv master.zip raytracer-master.zip
+  unzip raytracer-master.zip
+  rm raytracer-master.zip
+  cd raytracer-master
+  for i in "*.txt"; do sed -i s/\\./,/g $i; done
+  for i in "*.txt"; do sed -i s/,bmp/\\.bmp/g $i; done
+  cd ..
+fi
+
+clpth="$init_dir/raytracer-master/src:$init_dir/BIT:$init_dir/BIT/samples:."
+
+# Just BIT stuff
+cd "$init_dir/BIT/samples"
+javac *.java
+
+cd "$init_dir/raytracer-master"
+make clean
+make
+
+# Reinstruments the raytracer code
+java -cp $clpth StatisticsToolToFile -dynamic src/raytracer/ src/raytracer/
+java -cp $clpth StatisticsToolToFile -dynamic src/raytracer/pigments src/raytracer/pigments
+java -cp $clpth StatisticsToolToFile -dynamic src/raytracer/shapes/ src/raytracer/pigments
+
+cd $init_dir
+
+# Raytracer stuff
+cp *.java raytracer-master
+cd raytracer-master
+javac -cp $clpth *.java
+echo
+echo "Starting WebServer..."
+java_bin=$(which java)
+log=../server.log
+sudo rm $log
+sudo $java_bin -cp $clpth -XX:-UseSplitVerifier WebServer > >(tee -a $log) 2> >(tee -a $log >&2)
+
+cd $init_dir
