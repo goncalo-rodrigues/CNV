@@ -9,19 +9,19 @@ if [[ ${ls_res} != *"raytracer-master"* ]]; then
   unzip raytracer-master.zip
   rm raytracer-master.zip
   cd raytracer-master
-  for i in "*.txt"; do sed -i s/\\./,/g $i; done
-  for i in "*.txt"; do sed -i s/,bmp/\\.bmp/g $i; done
+  #for i in "*.txt"; do sed -i s/\\./,/g $i; done
+  #for i in "*.txt"; do sed -i s/,bmp/\\.bmp/g $i; done
   make
   cd ..
 fi
 
 cp *.java raytracer-master
 cd raytracer-master
-javac -cp ../raytracer-master/src *.java
+javac -cp /home/ec2-user/raytracer-master/src *.java
 echo
 echo "Starting WebServer..."
 java_bin=$(which java)
 log=../server.log
 sudo rm $log
-sudo $java_bin -cp ~/CNV/raytracer-master/src:~/CNV/BIT:~/CNV/BIT/samples:. -XX:-UseSplitVerifier WebServer > >(tee -a $log) 2> >(tee -a $log >&2)
+sudo $java_bin -cp /home/ec2-user/raytracer-master/src:/home/ec2-user/BIT:/home/ec2-user/BIT/samples:. -XX:-UseSplitVerifier WebServer > >(tee -a $log) 2> >(tee -a $log >&2)
 cd ..
