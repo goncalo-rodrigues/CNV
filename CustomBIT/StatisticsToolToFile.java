@@ -19,6 +19,7 @@
 import BIT.highBIT.*;
 import BIT.lowBIT.*;
 import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
+import sun.management.MethodInfo;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -186,6 +187,9 @@ public class StatisticsToolToFile
                         }
 						Instruction[] instructions = routine.getInstructions();
                         routine.addBefore("StatisticsToolToFile", "dynMethodCount", caller);
+                        Method_Info methodInfo = routine.getMethodInfo();
+
+
 						for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
 							BasicBlock bb = (BasicBlock) b.nextElement();
 							Instruction instr = (Instruction)instructions[bb.getEndAddress()];
@@ -212,7 +216,7 @@ public class StatisticsToolToFile
 						for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
 							BasicBlock bb = (BasicBlock) b.nextElement();
 //							bb.addBefore("StatisticsToolToFile", "dynInstrCount", new Integer(bb.size()));
-							bb.addBefore("StatisticsToolToFile", "dynMethodBBCount", caller);
+							bb.addBefore("StatisticsToolToFile", "dynMethodBBCount", caller+ " "  + bb.size());
 						}
 					}
 
@@ -238,19 +242,19 @@ public class StatisticsToolToFile
 			long dyn_bb_count = dm.getBBCount();
 			long dyn_instr_count = dm.getInstrCount();
 
-
-			try{
-				PrintWriter writer = new PrintWriter("dynamic_" + threadId + ".txt", "UTF-8");
-
-				writer.println("Dynamic information summary:");
-				writer.println("Number of methods:      " + dyn_method_count);
-				writer.println("Number of basic blocks: " + dyn_bb_count);
-				writer.println("Number of instructions: " + dyn_instr_count);
-				writer.close();
-
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+//
+//			try{
+//				PrintWriter writer = new PrintWriter("dynamic_" + threadId + ".txt", "UTF-8");
+//
+//				writer.println("Dynamic information summary:");
+//				writer.println("Number of methods:      " + dyn_method_count);
+//				writer.println("Number of basic blocks: " + dyn_bb_count);
+//				writer.println("Number of instructions: " + dyn_instr_count);
+//				writer.close();
+//
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
 
 			/*
 			 *  End of the changed instructions
@@ -280,27 +284,31 @@ public class StatisticsToolToFile
 			 */
 
 			try{
-				PrintWriter writer = new PrintWriter(new FileOutputStream(
-						new File("dynamic_" + threadId + ".txt"), true));
+                PrintWriter writer = new PrintWriter("dynamic_" + threadId + ".txt", "UTF-8");
                 PrintWriter dot_writer = new PrintWriter("dynamic_full_" + threadId + ".dot", "UTF-8");
                 PrintWriter dot_writer2 = new PrintWriter("dynamic_small_" + threadId + ".dot", "UTF-8");
-				writer.println();
-				writer.println("Average number of instructions per basic block: " + instr_per_bb);
-				writer.println("Average number of instructions per method:      " + instr_per_method);
-				writer.println("Average number of basic blocks per method:      " + bb_per_method);
-				writer.println("Method invocations:");
+//				writer.println();
+                writer.println("description,value");
+				writer.println("instructions/bb," + instr_per_bb);
+				writer.println("instructions/method," + instr_per_method);
+				writer.println("bb/method," + bb_per_method);
+//				writer.println("Method invocations:");
+
+                BigInteger total_instr = BigInteger.ZERO;
 				for(Map.Entry<String, BigInteger> entry : entries) {
 					String key = entry.getKey();
 					BigInteger value = entry.getValue();
 //                    System.out.println(key + "," + value);
+                    writer.println(key + "," + value.toString());
+                    writer.println(key + "-instructions," + method_bb_map.get(key).toString());
 //					writer.println(String.format("%30s",key) + "\t" + String.format("%10s", value.toString()) + "\t" +
 //					String.format("%10s", method_bb_map.get(key).divide(value).toString()));
 
-					// do what you have to do here
-					// In your case, an other loop.
+					total_instr = total_instr.add( method_bb_map.get(key));
 				}
 
-                writer.println("Method invocations:");
+				writer.println("totalinstr," + total_instr.toString());
+
                 HashMap<String, BigInteger> methodCallMap = dm.getMethodCallMap();
                 List<Map.Entry<String, BigInteger>> callEntries = new ArrayList<>(methodCallMap.entrySet());
                 Collections.sort(callEntries, new Comparator<Map.Entry<String, BigInteger>>() {
@@ -357,17 +365,20 @@ public class StatisticsToolToFile
                 Queue<MethodNode> qNode = new ArrayDeque<>();
                 qNode.add(nodes.get("draw"));
                 List<MethodNode> visited = new ArrayList<>();
+                double decay = 0.99;
                 while (!qNode.isEmpty()) {
                     final MethodNode tempNode = qNode.remove();
-                    List<MethodNode> children = tempNode.getTopChildren(0.8);
+                    List<MethodNode> children = tempNode.getTopChildren(Math.max(0.9*decay, 0.5));
                     for (MethodNode child: children) {
                         if (!visited.contains(child)) {
                             qNode.add(child);
                             visited.add(child);
+                            decay*=decay;
                         }
 
                         dot_writer2.println(tempNode.name + " -> " + child.name + "   [label=" + child.parents.get(tempNode).multiply(BigInteger.TEN).multiply(BigInteger.TEN).divide(tempNode.executedOthers).toString()+"];");
                     }
+
                 }
                 dot_writer2.println("}");
 //                for (MethodNode node: nodes.values()) {
@@ -481,7 +492,9 @@ public class StatisticsToolToFile
 				dyn.put(threadId, new DynamicMetrics());
 		}
 
-		dyn.get(threadId).incBBCount(1, routineName.replace("/", "").replace("<", "").replace(">", ""));
+		String[] splitted = routineName.split(" ");
+
+		dyn.get(threadId).incBBCount(Integer.parseInt(splitted[1]), splitted[0]);
 	}
 
 	public static void doAlloc(File in_dir, File out_dir)
