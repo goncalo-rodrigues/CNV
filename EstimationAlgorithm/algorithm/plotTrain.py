@@ -238,7 +238,7 @@ def visualAlgorithm(vxsize,vysize,maxcost,samplesize,numberounds):
     print(statistics)
 
 
-def calculatePlot(vxsize, vysize, samplesize, numberounds,realTable,namestr=""):
+def calculateTrace(vxsize, vysize, samplesize, numberounds,realTable,namestr=""):
     previsionTable = createTable(vxsize, vysize)
     statistics = []
     xplot = []
@@ -255,11 +255,12 @@ def calculatePlot(vxsize, vysize, samplesize, numberounds,realTable,namestr=""):
     trace = go.Scatter(x=xplot, y=statistics,name =name)#,line=dict(shape='spline'))
     return trace
 
+
 # create a trace with the evolution of precision by the number of server requests
 def plotAlgorithm(vxsize, vysize, maxcost, samplesize, numberounds):
     previsionTable = createTable(vxsize, vysize)
     realTable = createRandomTable(vxsize, vysize, maxcost)
-    return calculatePlot(vxsize, vysize, samplesize, numberounds,realTable)
+    return calculateTrace(vxsize, vysize, samplesize, numberounds,realTable)
 
 
 
@@ -286,9 +287,17 @@ def calculatePlotsOnImage(vxsize, vysize, fname, samplesize, numberounds):
     previsionTable = createTable(vxsize, vysize)
     realTable = print_image(fname, (100, 100), (vxsize, vysize))
     print("got file table:" + fname)
-    trace = calculatePlot(vxsize, vysize, samplesize, numberounds, realTable, fname)
+    trace = calculateTrace(vxsize, vysize, samplesize, numberounds, realTable, fname)
+    return trace
 
-    data = [trace]
+
+def calculatePlotsOnImageList(vxsize, vysize, filesname, samplesize, numberounds, times, growquocient):
+    data = []
+    for fname in filesname:
+        trace = calculatePlotsOnImage(vxsize, vysize, fname, samplesize, numberounds)
+        data.append(trace)
+        #t = threading.Thread(target=calculatePlotsOnImage, args=(vxsize, vysize, fname, samplesize, numberounds))
+        #t.start()
     title = "Precision by the number of requests changin window size.\n" + \
             "   sample size:" + str(samplesize) + "\n"
     plotly.offline.plot({
@@ -296,19 +305,13 @@ def calculatePlotsOnImage(vxsize, vysize, fname, samplesize, numberounds):
         "layout": Layout(title=title)
     })
 
-def calculatePlotsOnImageList(vxsize, vysize, filesname, samplesize, numberounds, times, growquocient):
-    for fname in filesname:
-        calculatePlotsOnImage(vxsize, vysize, fname, samplesize, numberounds)
-        #t = threading.Thread(target=calculatePlotsOnImage, args=(vxsize, vysize, fname, samplesize, numberounds))
-        #t.start()
-
 
 
 XSIZE=10
 YSIZE=10
 MAXCOST = 10
 SAMPLESIZE = 50
-NUMBERROUNDS = 20
+NUMBERROUNDS = 50
 
 NTRACES = 10
 GROWQUOCIENT =1
