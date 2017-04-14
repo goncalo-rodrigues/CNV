@@ -8,6 +8,8 @@ import decimal
 import math
 from datetime import datetime
 import time
+import numpy as np
+import plotly.graph_objs as go
 
 RED = '\033[31m'
 GREEN = '\033[32m'
@@ -43,11 +45,49 @@ def _round(val: float, ndigits=0):
 
 #--------------------------
 
+
+
+#-----------------Project Functions------------------
 class TableElement:
     def __init__(self, cost, level, group):
         self.cost = cost
         self.level = level
         self.group = group
+
+
+def estimatecost(x1, y1, x2, y2, previsionTable):
+    prevision = 0
+    for x in range(x1, x2+1):
+        for y in range(y1, y2+1):
+            prevision += previsionTable[y][x].cost
+    return prevision
+
+
+def Insert(x1, y1, x2, y2, previsionTable, totalcost):
+    insertLevel = (abs(x1-x2)+1)*(abs(y1-y2)+1)
+    knownCost = 0
+    nElemetLessPrecise = 0
+    for x in range(x1, x2+1):
+        for y in range(y1, y2+1):
+            if(previsionTable[y][x].level < insertLevel):
+                knownCost += previsionTable[y][x].cost
+            else:
+                nElemetLessPrecise += 1
+
+    costToSplit = totalcost - knownCost
+    if costToSplit <0:
+        costToSplit = nElemetLessPrecise
+
+    if nElemetLessPrecise >0:
+        eachCost = costToSplit/nElemetLessPrecise
+        for x in range(x1, x2+1):
+            for y in range(y1, y2+1):
+                if(previsionTable[y][x].level > insertLevel):
+                    previsionTable[y][x].cost = eachCost
+                    previsionTable[y][x].level = insertLevel
+
+
+# -------------      END    ------------------------------
 
 
 def createTable(Xsize, Ysize):
@@ -94,14 +134,6 @@ def printTablesBySide(t1, expected):
     print("\n")
 
 
-def estimatecost(x1, y1, x2, y2, previsionTable):
-    prevision = 0
-    for x in range(x1, x2+1):
-        for y in range(y1, y2+1):
-            prevision += previsionTable[y][x].cost
-    return prevision
-
-
 def SimulateRayTracer(x1, y1, x2, y2, realCostTable):
     cost = 0
     for x in range(x1, x2+1):
@@ -110,39 +142,20 @@ def SimulateRayTracer(x1, y1, x2, y2, realCostTable):
     return cost
 
 
-def Insert(x1, y1, x2, y2, previsionTable, totalcost):
-    insertLevel = (abs(x1-x2)+1)*(abs(y1-y2)+1)
-    print("Insert Level:" + str(insertLevel))
-    knownCost = 0
-    nElemetLessPrecise = 0
-    for x in range(x1, x2+1):
-        for y in range(y1, y2+1):
-            if(previsionTable[y][x].level < insertLevel):
-                knownCost += previsionTable[y][x].cost
-            else:
-                nElemetLessPrecise += 1
-
-    costToSplit = totalcost - knownCost
-    if costToSplit <0:
-        costToSplit = nElemetLessPrecise
-
-    if nElemetLessPrecise >0:
-        eachCost = costToSplit/nElemetLessPrecise
-        for x in range(x1, x2+1):
-            for y in range(y1, y2+1):
-                if(previsionTable[y][x].level > insertLevel):
-                    previsionTable[y][x].cost = eachCost
-                    previsionTable[y][x].level = insertLevel
-
 
 def calculateAndInsert(x1, y1, x2, y2, realCostTable, previsionTable):
     #time.sleep(0.1)
     cost = SimulateRayTracer(x1, y1, x2, y2, realCostTable)
     estimate = estimatecost(x1, y1, x2, y2, previsionTable)
     precision = resultPrecision(estimate,cost)
+    insertLevel = (abs(x1 - x2) + 1) * (abs(y1 - y2) + 1)
     print("x1:" + str(x1) + " " + "y1:" + str(y1) + " " + "x2:" + str(x2) + " " + "y2:" + str(y2) + "\n " +
           "prevision: " + str(estimate) + "  cost:"+str(cost) + "  precision: "+
-          str(precision)+"%")
+          str(precision)+"%\ninsert level:"+str(insertLevel))
+    Insert(x1, y1, x2, y2, previsionTable, cost)
+
+def calculateAndInsertWithouPrint(x1, y1, x2, y2, realCostTable, previsionTable):
+    cost = SimulateRayTracer(x1, y1, x2, y2, realCostTable)
     Insert(x1, y1, x2, y2, previsionTable, cost)
 
 
@@ -159,6 +172,7 @@ def getStatistics(realCostTable, previsionTable,xsize,ysize,sampleSize):
         total += precision
 
     return total/n
+
 
 def resultPrecision(v1,v2):
     # abs(esperado - real) / real
@@ -204,37 +218,58 @@ def visualAlgorithm(vxsize,vysize,maxcost,samplesize,numberounds):
 
 
 
-def plotAlgorithm(vxsize,vysize,maxcost,samplesize,numberounds):
+def plotAlgorithm(vxsize, vysize, maxcost, samplesize, numberounds):
     previsionTable = createTable(vxsize, vysize)
-    realTable = createRandomTable(vxsize, vysize,maxcost)
+    realTable = createRandomTable(vxsize, vysize, maxcost)
     statistics = []
     xplot = []
 
     for x in range(0,numberounds):
         inp = randomImput(vxsize,vysize)
-        calculateAndInsert(inp[0], inp[1], inp[2], inp[3], realTable, previsionTable)
-        precision1 = getStatistics(realTable, previsionTable,vxsize,vysize,samplesize)
-        print(precision1)
+        calculateAndInsertWithouPrint(inp[0], inp[1], inp[2], inp[3], realTable, previsionTable)
+        precision1 = getStatistics(realTable, previsionTable, vxsize, vysize, samplesize)
         statistics.append(precision1)
         xplot.append(x)
+    averagePrecision = np.average(statistics)
 
-    title = "Precision by the number of requests\n"+\
-            " sample size:"+str(samplesize)+"\n"+\
-            " table size:"+str(vxsize)+"x"+str(vysize)+"\n"
+    name = "SIMPLE   table size:"+str(vxsize)+"x"+str(vysize)+"  average precision:" + str(averagePrecision) + "%\n"
+    trace = go.Scatter(x=xplot, y=statistics,name =name)
+    return trace
+
+def calculate1plot(vxsize, vysize, maxcost, samplesize, numberounds):
+    trace1 = plotAlgorithm(vxsize, vysize, maxcost, samplesize, numberounds)
+    data = [trace1]
+    title = "Precision by the number of requests.\n" + \
+            "   sample size:" + str(samplesize) + "\n"
     plotly.offline.plot({
-        "data": [Scatter(x=xplot, y=statistics)],
+        "data": data,
         "layout": Layout(title=title)
     })
 
-XSIZE=100
-YSIZE=100
-MAXCOST = 9
-SAMPLESIZE = 10
-NUMBERROUNDS = 1000
 
+def calculateSeveralPlots(vxsize, vysize, maxcost, samplesize, numberounds, times, growquocient):
+    data = []
+    for i in range(1,times+1):
+        val = growquocient*i
+        data.append(plotAlgorithm(vxsize*val, vysize*val, maxcost, samplesize, numberounds))
 
+    title = "Precision by the number of requests changin window size.\n" + \
+            "   sample size:" + str(samplesize) + "\n"
+    plotly.offline.plot({
+        "data": data,
+        "layout": Layout(title=title)
+    })
+
+XSIZE=10
+YSIZE=10
+MAXCOST = 10
+SAMPLESIZE = 50
+NUMBERROUNDS = 50
+
+NTRACES = 10
+GROWQUOCIENT =2
 #visualAlgorithm(XSIZE,YSIZE,MAXCOST,SAMPLESIZE,NUMBERROUNDS)
-plotAlgorithm(XSIZE,YSIZE,MAXCOST,SAMPLESIZE,NUMBERROUNDS)
+calculateSeveralPlots(XSIZE, YSIZE, MAXCOST, SAMPLESIZE, NUMBERROUNDS,NTRACES,GROWQUOCIENT)
 
 
 """
