@@ -52,9 +52,9 @@ def createTable(Xsize, Ysize):
     return table
 
 
-def createRandomTable(Xsize, Ysize):
+def createRandomTable(Xsize, Ysize, maxCost):
     r = random.SystemRandom()
-    table = [[r.randint(1, 9) for x in range(Xsize)] for y in range(Ysize)]
+    table = [[r.randint(1, maxCost) for x in range(Xsize)] for y in range(Ysize)]
     return table
 
 
@@ -132,13 +132,41 @@ def Insert(x1, y1, x2, y2, previsionTable, totalcost):
 
 
 def calculateAndInsert(x1, y1, x2, y2, realCostTable, previsionTable):
-    time.sleep(0.1)
+    #time.sleep(0.1)
     cost = SimulateRayTracer(x1, y1, x2, y2, realCostTable)
     estimate = estimatecost(x1, y1, x2, y2, previsionTable)
+    precision = resultPrecision(estimate,cost)
     print("x1:" + str(x1) + " " + "y1:" + str(y1) + " " + "x2:" + str(x2) + " " + "y2:" + str(y2) + "\n " +
-          "prevision: " + str(estimate) + "  cost:"+str(cost))
+          "prevision: " + str(estimate) + "  cost:"+str(cost) + "  precision: "+
+          str(precision)+"%")
     Insert(x1, y1, x2, y2, previsionTable, cost)
     printTablesBySide(previsionTable, realTable)
+
+
+def getStatistics(realCostTable, previsionTable,xsize,ysize,sampleSize):
+    total = 0
+    n = 0
+    for x in range(0,sampleSize):
+        window = randomImput(xsize, ysize)
+        cost = SimulateRayTracer(window[0], window[1], window[2], window[3], realCostTable)
+        estimate = estimatecost(window[0], window[1], window[2], window[3], previsionTable)
+        precision = resultPrecision(estimate, cost)
+        n += 1
+        total += precision
+
+    return total/n
+
+def resultPrecision(v1,v2):
+    # abs(esperado - real) / real
+    if v1 == v2:
+        return 100
+    elif v1 ==0 or v2 == 0:
+        return 0
+    elif(v1 > v2):
+        return v2 / v1 * 100
+    else:
+        return v1 / v2 * 100
+
 
 def randomImput(sizex, sizey):
     r = random.SystemRandom()
@@ -157,20 +185,20 @@ XSIZE=10
 YSIZE=10
 
 previsionTable = createTable(XSIZE, YSIZE)
-realTable = createRandomTable(XSIZE, YSIZE)
+realTable = createRandomTable(XSIZE, YSIZE,9)
 
 printTablesBySide(previsionTable,realTable)
 
-#calculateAndInsert(0,0,XSIZE-1,YSIZE-1,realTable,previsionTable)
-
-#calculateAndInsert(0,0,0,5,realTable,previsionTable)
-
-#calculateAndInsert(0,0,0,0,realTable,previsionTable)
+statistics = []
 
 for x in range(0,1000):
     inp = randomImput(XSIZE,YSIZE)
     print(inp[0], inp[1], inp[2], inp[3])
     calculateAndInsert(inp[0], inp[1], inp[2], inp[3], realTable, previsionTable)
+    precision1 = getStatistics(realTable, previsionTable,XSIZE,YSIZE,10)
+    statistics.append(precision1)
+
+print(statistics)
 
 
 
