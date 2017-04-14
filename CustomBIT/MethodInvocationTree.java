@@ -1,4 +1,5 @@
 import java.io.PrintWriter;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,6 +26,10 @@ public class MethodInvocationTree {
         current = n;
     }
 
+    public void incCurrentMethod() {
+        current.incInst();
+    }
+
     public void print(PrintWriter writer) {
         main.print(writer, 0);
     }
@@ -33,6 +38,9 @@ public class MethodInvocationTree {
         private String name;
         private Node parent;
         private List<Node> invokes;
+        private BigInteger instructions = BigInteger.ZERO;
+
+        public void incInst() { instructions = instructions.add(BigInteger.ONE); }
 
         public void print(PrintWriter writer, int identation) {
             String spaces = "";
@@ -41,7 +49,7 @@ public class MethodInvocationTree {
                 spaces = String.format("%" + identation + "s", "");
 
             String current = spaces + name;
-            writer.println(current);
+            writer.println(current + " : " + instructions);
 
             if(invokes.size() == 0)
                 return;
@@ -49,7 +57,7 @@ public class MethodInvocationTree {
             for (Node n : invokes)
                 n.print(writer, identation + 2);
 
-            writer.println(current);
+            writer.println(current + " --------");
         }
     }
 }
