@@ -1,3 +1,4 @@
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,13 +25,8 @@ public class MethodInvocationTree {
         current = n;
     }
 
-    @Override
-    public String toString() {
-        return main.output(0);
-    }
-
-    public void print() {
-        main.print();
+    public void print(PrintWriter writer) {
+        main.print(writer, 0);
     }
 
     public static class Node {
@@ -38,26 +34,22 @@ public class MethodInvocationTree {
         private Node parent;
         private List<Node> invokes;
 
-        public String output(int identation) {
+        public void print(PrintWriter writer, int identation) {
             String spaces = "";
 
             if(identation > 0)
                 spaces = String.format("%" + identation + "s", "");
 
-            String current = spaces + name + "\n";
+            String current = spaces + name;
+            writer.println(current);
 
             if(invokes.size() == 0)
-                return current;
+                return;
 
-            StringBuilder children = new StringBuilder("");
             for (Node n : invokes)
-                children.append(n.output(identation + 2));
+                n.print(writer, identation + 2);
 
-            return current + children + current;
-        }
-
-        public void print() {
-            System.out.println(output(0));
+            writer.println(current);
         }
     }
 }

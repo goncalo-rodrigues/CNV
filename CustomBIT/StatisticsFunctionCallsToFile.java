@@ -86,7 +86,7 @@ public class StatisticsFunctionCallsToFile
 			try{
 				PrintWriter writer = new PrintWriter("dynamic_" + threadId + ".txt", "UTF-8");
 
-				writer.println(mit.toString());
+				mit.print(writer);
 				writer.close();
 			} catch (IOException e) {
 				e.printStackTrace();
