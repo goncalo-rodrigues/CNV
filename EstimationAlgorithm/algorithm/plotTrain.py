@@ -1,5 +1,3 @@
-
-
 import plotly
 from plotly.graph_objs import Scatter, Layout
 import pprint
@@ -10,6 +8,10 @@ from datetime import datetime
 import time
 import numpy as np
 import plotly.graph_objs as go
+
+from algorithm.imageLoader import print_image
+
+
 
 RED = '\033[31m'
 GREEN = '\033[32m'
@@ -48,13 +50,16 @@ def _round(val: float, ndigits=0):
 
 
 #-----------------Project Functions------------------
+
+#this is the info that we need about each element on the matrix
 class TableElement:
     def __init__(self, cost, level, group):
-        self.cost = cost
-        self.level = level
-        self.group = group
+        self.cost = cost        #the predicted cost to comput this elemet
+        self.level = level      #the precision of its cost (less is better)
+        self.group = group      #the lowest level grout to wich it pertences
 
 
+# This is the query that gives an estimation about how much will cost
 def estimatecost(x1, y1, x2, y2, previsionTable):
     prevision = 0
     for x in range(x1, x2+1):
@@ -63,6 +68,7 @@ def estimatecost(x1, y1, x2, y2, previsionTable):
     return prevision
 
 
+# this is the method to be aplied after render in orde to improve prevision table
 def Insert(x1, y1, x2, y2, previsionTable, totalcost):
     insertLevel = (abs(x1-x2)+1)*(abs(y1-y2)+1)
     knownCost = 0
@@ -89,19 +95,21 @@ def Insert(x1, y1, x2, y2, previsionTable, totalcost):
 
 # -------------      END    ------------------------------
 
-
+# Creates a prevision table
 def createTable(Xsize, Ysize):
     totalpixel = Xsize*Ysize+1;
     table = [[TableElement(0,totalpixel,0) for x in range(Xsize)] for y in range(Ysize)]
     return table
 
 
+#Create a completly random table
 def createRandomTable(Xsize, Ysize, maxCost):
     r = random.SystemRandom()
     table = [[r.randint(1, maxCost) for x in range(Xsize)] for y in range(Ysize)]
     return table
 
 
+# print the 2 tables side by side
 def printTablesBySide(t1, expected):
     nlines = len(t1)
     ncolumn = len(t1[0])
@@ -134,6 +142,7 @@ def printTablesBySide(t1, expected):
     print("\n")
 
 
+# This method simulates the execution of the raytrace returning the cost
 def SimulateRayTracer(x1, y1, x2, y2, realCostTable):
     cost = 0
     for x in range(x1, x2+1):
@@ -142,7 +151,7 @@ def SimulateRayTracer(x1, y1, x2, y2, realCostTable):
     return cost
 
 
-
+# Calculates the cost of render and update the prevision table
 def calculateAndInsert(x1, y1, x2, y2, realCostTable, previsionTable):
     #time.sleep(0.1)
     cost = SimulateRayTracer(x1, y1, x2, y2, realCostTable)
@@ -154,12 +163,14 @@ def calculateAndInsert(x1, y1, x2, y2, realCostTable, previsionTable):
           str(precision)+"%\ninsert level:"+str(insertLevel))
     Insert(x1, y1, x2, y2, previsionTable, cost)
 
+
 def calculateAndInsertWithouPrint(x1, y1, x2, y2, realCostTable, previsionTable):
     cost = SimulateRayTracer(x1, y1, x2, y2, realCostTable)
     Insert(x1, y1, x2, y2, previsionTable, cost)
 
 
-
+# Runs samplesize times a random request over the current previsiontable state
+# and check its accuaricy comparing to real cost table
 def getStatistics(realCostTable, previsionTable,xsize,ysize,sampleSize):
     total = 0
     n = 0
@@ -174,7 +185,8 @@ def getStatistics(realCostTable, previsionTable,xsize,ysize,sampleSize):
     return total/n
 
 
-def resultPrecision(v1,v2):
+# return the Preciso of the gess
+def resultPrecision(v1, v2):
     # abs(esperado - real) / real
     if v1 == v2:
         return 100
@@ -186,6 +198,7 @@ def resultPrecision(v1,v2):
         return v1 / v2 * 100
 
 
+# Emulates a completely random request
 def randomImput(sizex, sizey):
     r = random.SystemRandom()
     xs = r.randint(1, sizex)
@@ -198,7 +211,7 @@ def randomImput(sizex, sizey):
     return result
 
 
-
+# Displays the evolution of the prevision table
 def visualAlgorithm(vxsize,vysize,maxcost,samplesize,numberounds):
     previsionTable = createTable(vxsize, vysize)
     realTable = createRandomTable(vxsize, vysize,maxcost)
@@ -217,7 +230,7 @@ def visualAlgorithm(vxsize,vysize,maxcost,samplesize,numberounds):
     print(statistics)
 
 
-
+# create a trace with the evolution of precision by the number of server requests
 def plotAlgorithm(vxsize, vysize, maxcost, samplesize, numberounds):
     previsionTable = createTable(vxsize, vysize)
     realTable = createRandomTable(vxsize, vysize, maxcost)
@@ -236,15 +249,9 @@ def plotAlgorithm(vxsize, vysize, maxcost, samplesize, numberounds):
     trace = go.Scatter(x=xplot, y=statistics,name =name)#,line=dict(shape='spline'))
     return trace
 
+
 def calculate1plot(vxsize, vysize, maxcost, samplesize, numberounds):
-    trace1 = plotAlgorithm(vxsize, vysize, maxcost, samplesize, numberounds)
-    data = [trace1]
-    title = "Precision by the number of requests.\n" + \
-            "   sample size:" + str(samplesize) + "\n"
-    plotly.offline.plot({
-        "data": data,
-        "layout": Layout(title=title)
-    })
+    calculateSeveralPlots(vxsize, vysize, maxcost, samplesize, numberounds, 1, 1)
 
 
 def calculateSeveralPlots(vxsize, vysize, maxcost, samplesize, numberounds, times, growquocient):
@@ -261,6 +268,35 @@ def calculateSeveralPlots(vxsize, vysize, maxcost, samplesize, numberounds, time
         "layout": Layout(title=title)
     })
 
+
+
+def calculatePlotsOnImages(vxsize, vysize, filesname, samplesize, numberounds, times, growquocient):
+    for fname in filesname:
+        previsionTable = createTable(vxsize, vysize)
+        realTable = print_image(fname, resolution=(100,100), grid=(vxsize,vysize))
+        print("got file table:" + fname)
+        statistics = []
+        xplot = []
+        for x in range(0, numberounds):
+            inp = randomImput(vxsize, vysize)
+            calculateAndInsertWithouPrint(inp[0], inp[1], inp[2], inp[3], realTable, previsionTable)
+            precision1 = getStatistics(realTable, previsionTable, vxsize, vysize, samplesize)
+            statistics.append(precision1)
+            xplot.append(x)
+        averagePrecision = np.average(statistics)
+
+        name = "SIMPLE"+ fname+"  table size:" + str(vxsize) + "x" + str(vysize) + "  average precision:" + str(
+            averagePrecision) + "%\n"
+        trace = go.Scatter(x=xplot, y=statistics, name=name)  # ,line=dict(shape='spline'))
+        data = [trace]
+        title = "Precision by the number of requests changin window size.\n" + \
+                "   sample size:" + str(samplesize) + "\n"
+        plotly.offline.plot({
+            "data": data,
+            "layout": Layout(title=title)
+        })
+
+
 XSIZE=10
 YSIZE=10
 MAXCOST = 10
@@ -269,9 +305,12 @@ NUMBERROUNDS = 20
 
 NTRACES = 10
 GROWQUOCIENT =1
-#visualAlgorithm(XSIZE,YSIZE,MAXCOST,SAMPLESIZE,NUMBERROUNDS)
-calculateSeveralPlots(XSIZE, YSIZE, MAXCOST, SAMPLESIZE, NUMBERROUNDS,NTRACES,GROWQUOCIENT)
 
+files =['test01.txt','test02.txt','test03.txt','test04.txt','test05.txt']
+
+#visualAlgorithm(XSIZE,YSIZE,MAXCOST,SAMPLESIZE,NUMBERROUNDS)
+#calculateSeveralPlots(XSIZE, YSIZE, MAXCOST, SAMPLESIZE, NUMBERROUNDS,NTRACES,GROWQUOCIENT)
+calculatePlotsOnImages(XSIZE, YSIZE, files, SAMPLESIZE, NUMBERROUNDS,NTRACES,GROWQUOCIENT)
 
 """
 steps = []
