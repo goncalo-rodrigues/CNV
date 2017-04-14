@@ -9,6 +9,8 @@ import time
 import numpy as np
 import plotly.graph_objs as go
 
+import threading
+
 from algorithm.imageLoader import print_image
 
 
@@ -211,6 +213,12 @@ def randomImput(sizex, sizey):
     return result
 
 
+
+
+#================================================================
+#---            from here are the ways to 'PLAY'              ---
+#================================================================
+
 # Displays the evolution of the prevision table
 def visualAlgorithm(vxsize,vysize,maxcost,samplesize,numberounds):
     previsionTable = createTable(vxsize, vysize)
@@ -230,10 +238,8 @@ def visualAlgorithm(vxsize,vysize,maxcost,samplesize,numberounds):
     print(statistics)
 
 
-# create a trace with the evolution of precision by the number of server requests
-def plotAlgorithm(vxsize, vysize, maxcost, samplesize, numberounds):
+def calculatePlot(vxsize, vysize, samplesize, numberounds,realTable,namestr=""):
     previsionTable = createTable(vxsize, vysize)
-    realTable = createRandomTable(vxsize, vysize, maxcost)
     statistics = []
     xplot = []
 
@@ -245,9 +251,17 @@ def plotAlgorithm(vxsize, vysize, maxcost, samplesize, numberounds):
         xplot.append(x)
     averagePrecision = np.average(statistics)
 
-    name = "SIMPLE   table size:"+str(vxsize)+"x"+str(vysize)+"  average precision:" + str(averagePrecision) + "%\n"
+    name = "SIMPLE "+ namestr +" table size:"+str(vxsize)+"x"+str(vysize)+"  average precision:" + str(averagePrecision) + "%\n"
     trace = go.Scatter(x=xplot, y=statistics,name =name)#,line=dict(shape='spline'))
     return trace
+
+# create a trace with the evolution of precision by the number of server requests
+def plotAlgorithm(vxsize, vysize, maxcost, samplesize, numberounds):
+    previsionTable = createTable(vxsize, vysize)
+    realTable = createRandomTable(vxsize, vysize, maxcost)
+    return calculatePlot(vxsize, vysize, samplesize, numberounds,realTable)
+
+
 
 
 def calculate1plot(vxsize, vysize, maxcost, samplesize, numberounds):
@@ -268,33 +282,26 @@ def calculateSeveralPlots(vxsize, vysize, maxcost, samplesize, numberounds, time
         "layout": Layout(title=title)
     })
 
+def calculatePlotsOnImage(vxsize, vysize, fname, samplesize, numberounds):
+    previsionTable = createTable(vxsize, vysize)
+    realTable = print_image(fname, (100, 100), (vxsize, vysize))
+    print("got file table:" + fname)
+    trace = calculatePlot(vxsize, vysize, samplesize, numberounds, realTable, fname)
 
+    data = [trace]
+    title = "Precision by the number of requests changin window size.\n" + \
+            "   sample size:" + str(samplesize) + "\n"
+    plotly.offline.plot({
+        "data": data,
+        "layout": Layout(title=title)
+    })
 
-def calculatePlotsOnImages(vxsize, vysize, filesname, samplesize, numberounds, times, growquocient):
+def calculatePlotsOnImageList(vxsize, vysize, filesname, samplesize, numberounds, times, growquocient):
     for fname in filesname:
-        previsionTable = createTable(vxsize, vysize)
-        realTable = print_image(fname, resolution=(100,100), grid=(vxsize,vysize))
-        print("got file table:" + fname)
-        statistics = []
-        xplot = []
-        for x in range(0, numberounds):
-            inp = randomImput(vxsize, vysize)
-            calculateAndInsertWithouPrint(inp[0], inp[1], inp[2], inp[3], realTable, previsionTable)
-            precision1 = getStatistics(realTable, previsionTable, vxsize, vysize, samplesize)
-            statistics.append(precision1)
-            xplot.append(x)
-        averagePrecision = np.average(statistics)
+        calculatePlotsOnImage(vxsize, vysize, fname, samplesize, numberounds)
+        #t = threading.Thread(target=calculatePlotsOnImage, args=(vxsize, vysize, fname, samplesize, numberounds))
+        #t.start()
 
-        name = "SIMPLE"+ fname+"  table size:" + str(vxsize) + "x" + str(vysize) + "  average precision:" + str(
-            averagePrecision) + "%\n"
-        trace = go.Scatter(x=xplot, y=statistics, name=name)  # ,line=dict(shape='spline'))
-        data = [trace]
-        title = "Precision by the number of requests changin window size.\n" + \
-                "   sample size:" + str(samplesize) + "\n"
-        plotly.offline.plot({
-            "data": data,
-            "layout": Layout(title=title)
-        })
 
 
 XSIZE=10
@@ -310,23 +317,5 @@ files =['test01.txt','test02.txt','test03.txt','test04.txt','test05.txt']
 
 #visualAlgorithm(XSIZE,YSIZE,MAXCOST,SAMPLESIZE,NUMBERROUNDS)
 #calculateSeveralPlots(XSIZE, YSIZE, MAXCOST, SAMPLESIZE, NUMBERROUNDS,NTRACES,GROWQUOCIENT)
-calculatePlotsOnImages(XSIZE, YSIZE, files, SAMPLESIZE, NUMBERROUNDS,NTRACES,GROWQUOCIENT)
+calculatePlotsOnImageList(XSIZE, YSIZE, files, SAMPLESIZE, NUMBERROUNDS,NTRACES,GROWQUOCIENT)
 
-"""
-steps = []
-for i in range(len(data)):
-    step = dict(
-        method = 'restyle',
-        args = ['visible', [False] * len(data)],
-    )
-    step['args'][1][i] = True # Toggle i'th trace to "visible"
-    steps.append(step)
-
-sliders = [dict(active = 10,currentvalue = {"prefix": "Frequency: "}, pad = {"t": 50}, steps = steps )]
-
-layout = dict(sliders=sliders)
-
-fig = dict(data=data, layout=layout)
-
-py.iplot(fig, filename='Sine Wave Slider')
-"""
