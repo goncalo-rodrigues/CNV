@@ -1,3 +1,7 @@
+
+
+import plotly
+from plotly.graph_objs import Scatter, Layout
 import pprint
 import random
 import decimal
@@ -179,29 +183,75 @@ def randomImput(sizex, sizey):
     result = (x1, y1, x2, y2)
     return result
 
-XSIZE=10
-YSIZE=10
-MAXCOST = 9
-SAMPLESIZE = 10
-NUMBERROUNDS = 10
 
-def visualAlgorithm():
-    previsionTable = createTable(XSIZE, YSIZE)
-    realTable = createRandomTable(XSIZE, YSIZE,MAXCOST)
+
+def visualAlgorithm(vxsize,vysize,maxcost,samplesize,numberounds):
+    previsionTable = createTable(vxsize, vysize)
+    realTable = createRandomTable(vxsize, vysize,maxcost)
     printTablesBySide(previsionTable,realTable)
     statistics = []
-    x = []
 
-    for x in range(0,NUMBERROUNDS):
-        inp = randomImput(XSIZE,YSIZE)
+    for x in range(0,numberounds):
+        inp = randomImput(vxsize,vysize)
         print(inp[0], inp[1], inp[2], inp[3])
         calculateAndInsert(inp[0], inp[1], inp[2], inp[3], realTable, previsionTable)
         printTablesBySide(previsionTable, realTable)
-        precision1 = getStatistics(realTable, previsionTable,XSIZE,YSIZE,SAMPLESIZE)
+        precision1 = getStatistics(realTable, previsionTable,vxsize,vysize,samplesize)
         print(precision1)
         statistics.append(precision1)
 
     print(statistics)
 
-visualAlgorithm()
 
+
+def plotAlgorithm(vxsize,vysize,maxcost,samplesize,numberounds):
+    previsionTable = createTable(vxsize, vysize)
+    realTable = createRandomTable(vxsize, vysize,maxcost)
+    statistics = []
+    xplot = []
+
+    for x in range(0,numberounds):
+        inp = randomImput(vxsize,vysize)
+        calculateAndInsert(inp[0], inp[1], inp[2], inp[3], realTable, previsionTable)
+        precision1 = getStatistics(realTable, previsionTable,vxsize,vysize,samplesize)
+        print(precision1)
+        statistics.append(precision1)
+        xplot.append(x)
+
+    title = "Precision by the number of requests\n"+\
+            " sample size:"+str(samplesize)+"\n"+\
+            " table size:"+str(vxsize)+"x"+str(vysize)+"\n"
+    plotly.offline.plot({
+        "data": [Scatter(x=xplot, y=statistics)],
+        "layout": Layout(title=title)
+    })
+
+XSIZE=100
+YSIZE=100
+MAXCOST = 9
+SAMPLESIZE = 10
+NUMBERROUNDS = 1000
+
+
+#visualAlgorithm(XSIZE,YSIZE,MAXCOST,SAMPLESIZE,NUMBERROUNDS)
+plotAlgorithm(XSIZE,YSIZE,MAXCOST,SAMPLESIZE,NUMBERROUNDS)
+
+
+"""
+steps = []
+for i in range(len(data)):
+    step = dict(
+        method = 'restyle',
+        args = ['visible', [False] * len(data)],
+    )
+    step['args'][1][i] = True # Toggle i'th trace to "visible"
+    steps.append(step)
+
+sliders = [dict(active = 10,currentvalue = {"prefix": "Frequency: "}, pad = {"t": 50}, steps = steps )]
+
+layout = dict(sliders=sliders)
+
+fig = dict(data=data, layout=layout)
+
+py.iplot(fig, filename='Sine Wave Slider')
+"""
