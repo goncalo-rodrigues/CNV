@@ -3,6 +3,7 @@ import random
 import decimal
 import math
 from datetime import datetime
+import time
 
 RED = '\033[31m'
 GREEN = '\033[32m'
@@ -52,10 +53,8 @@ def createTable(Xsize, Ysize):
 
 
 def createRandomTable(Xsize, Ysize):
-    dt = datetime.now()
-    dt2 = datetime.now()
-    random.seed(dt.microsecond-dt2.microsecond)
-    table = [[random.randint(1, 9) for x in range(Xsize)] for y in range(Ysize)]
+    r = random.SystemRandom()
+    table = [[r.randint(1, 9) for x in range(Xsize)] for y in range(Ysize)]
     return table
 
 
@@ -90,12 +89,14 @@ def printTablesBySide(t1, expected):
         print(line)
     print("\n")
 
+
 def estimatecost(x1, y1, x2, y2, previsionTable):
     prevision = 0
     for x in range(x1, x2+1):
         for y in range(y1, y2+1):
             prevision += previsionTable[y][x].cost
     return prevision
+
 
 def SimulateRayTracer(x1, y1, x2, y2, realCostTable):
     cost = 0
@@ -118,38 +119,58 @@ def Insert(x1, y1, x2, y2, previsionTable, totalcost):
                 nElemetLessPrecise += 1
 
     costToSplit = totalcost - knownCost
-    eachCost = costToSplit/nElemetLessPrecise
+    if costToSplit <0:
+        costToSplit = nElemetLessPrecise
 
-    for x in range(x1, x2+1):
-        for y in range(y1, y2+1):
-            if(previsionTable[y][x].level > insertLevel):
-                previsionTable[y][x].cost = eachCost
-                previsionTable[y][x].level = insertLevel
+    if nElemetLessPrecise >0:
+        eachCost = costToSplit/nElemetLessPrecise
+        for x in range(x1, x2+1):
+            for y in range(y1, y2+1):
+                if(previsionTable[y][x].level > insertLevel):
+                    previsionTable[y][x].cost = eachCost
+                    previsionTable[y][x].level = insertLevel
 
 
 def calculateAndInsert(x1, y1, x2, y2, realCostTable, previsionTable):
+    time.sleep(0.1)
     cost = SimulateRayTracer(x1, y1, x2, y2, realCostTable)
     estimate = estimatecost(x1, y1, x2, y2, previsionTable)
     print("x1:" + str(x1) + " " + "y1:" + str(y1) + " " + "x2:" + str(x2) + " " + "y2:" + str(y2) + "\n " +
           "prevision: " + str(estimate) + "  cost:"+str(cost))
     Insert(x1, y1, x2, y2, previsionTable, cost)
+    printTablesBySide(previsionTable, realTable)
 
+def randomImput(sizex, sizey):
+    r = random.SystemRandom()
+    xs = r.randint(0, sizex)
+    ys = r.randint(0, sizey)
+    x1 = r.randint(0, sizex - xs)
+    x2 = x1+xs-1
+    y1 = r.randint(0, sizey - ys)
+    y2 = y1+ys-1
+    #cost = r.randint(0,xs*ys)
+    #result = (x1, y1, x2, y2, cost)
+    result = (x1, y1, x2, y2)
+    return result
 
 XSIZE=10
 YSIZE=10
-
 
 previsionTable = createTable(XSIZE, YSIZE)
 realTable = createRandomTable(XSIZE, YSIZE)
 
 printTablesBySide(previsionTable,realTable)
 
-calculateAndInsert(0,0,XSIZE-1,YSIZE-1,realTable,previsionTable)
-printTablesBySide(previsionTable,realTable)
+#calculateAndInsert(0,0,XSIZE-1,YSIZE-1,realTable,previsionTable)
 
-calculateAndInsert(0,0,0,5,realTable,previsionTable)
-printTablesBySide(previsionTable,realTable)
+#calculateAndInsert(0,0,0,5,realTable,previsionTable)
 
-calculateAndInsert(0,0,0,0,realTable,previsionTable)
-printTablesBySide(previsionTable,realTable)
+#calculateAndInsert(0,0,0,0,realTable,previsionTable)
+
+for x in range(0,1000):
+    inp = randomImput(XSIZE,YSIZE)
+    print(inp[0], inp[1], inp[2], inp[3])
+    calculateAndInsert(inp[0], inp[1], inp[2], inp[3], realTable, previsionTable)
+
+
 
