@@ -23,11 +23,11 @@ public class RequestThread implements Runnable {
     try {
       String query = t.getRequestURI().getQuery();
       Map<String, String> args = queryToMap(query);
-      String response = "Thread ID: " + Thread.currentThread().getId() + "\n###\n";
-      for (Map.Entry e : args.entrySet()) {
-        response += e.getKey() + "\t" + e.getValue() + "\n";
-      }
-      response += "###";
+      String response = String.valueOf(Thread.currentThread().getId());
+      //for (Map.Entry e : args.entrySet()) {
+        //response += e.getKey() + "\t" + e.getValue() + "\n";
+      //}
+      //response += "###";
 
       try {
         if(args.containsKey("f") && args.containsKey("sc") && args.containsKey("sr") && args.containsKey("wc") &&
