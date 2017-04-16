@@ -33,14 +33,17 @@ class PixelCalculator:
                 c = self.lst_pixel[1] + j
                 lst_needed_pixels[i].append((l, c))
 
-        print_matrix(lst_needed_pixels)
-        print ""
-
         # Calculates the value for the lb pixel table
         res = 0
         for i in range(needed_line):
             if i == needed_line - 1:
-                use_line = math.modf(self.lst_pixel[0] + self.lst_used[0] + self.prop)[0]
+                use_line = math.modf(self.lst_used[0] + self.prop)
+
+                if use_line[1] == 0:
+                    use_line = self.prop
+                else:
+                    use_line = use_line[0]
+
                 if use_line == 0:
                     if self.side < len(self.m):
                         use_line = 1
@@ -53,7 +56,12 @@ class PixelCalculator:
 
             for j in range(needed_col):
                 if j == needed_col - 1:
-                    use_col = math.modf(self.lst_pixel[1] + self.lst_used[1] + self.prop)[0]
+                    use_col = math.modf(self.lst_used[1] + self.prop)
+
+                    if use_col[1] == 0:
+                        use_col = self.prop
+                    else:
+                        use_col = use_col[0]
 
                     if use_col == 0:
                         if self.side < len(self.m):
@@ -68,7 +76,6 @@ class PixelCalculator:
                 line_m = int(lst_needed_pixels[i][j][0])
                 col_m = int(lst_needed_pixels[i][j][1])
 
-                # FIXME: This result is not doing the expect thing!!!
                 res += float(use_line * use_col * self.m[line_m][col_m])
 
         # Updates the next pixel to be calculated
@@ -93,9 +100,6 @@ class PixelCalculator:
 
             self.lst_used[1] = 0
             self.lb_side_counter = 1
-
-            print "!!!!!!!!!!!!!! NEW LINE !!!!!!!!!!!!!!"
-            print ""
 
         return res
 
@@ -182,9 +186,9 @@ def print_matrix(m):
 To try out
 """
 
-n_lines = 4
-n_cols = 4
-test_m = [[5 for x in range(n_cols)] for y in range(n_lines)]
+n_lines = 5
+n_cols = 5
+test_m = [[20 for x in range(n_cols)] for y in range(n_lines)]
 
 print "Test Matrix:"
 print_matrix(test_m)
@@ -200,4 +204,4 @@ print_matrix(test_m)
 # print_matrix(convert_to_square(revert_res))
 
 print "\nScale to store result:"
-print_matrix(scale_to_store(10, test_m))
+print_matrix(scale_to_store(4, test_m))
