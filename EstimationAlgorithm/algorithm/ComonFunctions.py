@@ -5,6 +5,8 @@ import math
 import numpy as np
 import plotly.graph_objs as go
 from algorithm.imageLoader import print_image
+from imageLoader import request_raytracer
+import pandas
 
 RED = '\033[31m'
 GREEN = '\033[32m'
@@ -84,6 +86,15 @@ def SimulateRayTracer(x1, y1, x2, y2, realCostTable):
             cost += realCostTable[y][x]
     return cost
 
+def RunRayTracer(x1, y1, x2, y2, realCostTable, fname):
+    y2 = y2 + 1
+    x2 = x2 + 1
+    width = x2-x1
+    height = y2-y1
+    id = request_raytracer(fname, len(realCostTable),len(realCostTable),height, width, height - y2, x1)
+    cols = pandas.read_csv('~/testcnv/raytracer-master/dynamic_%d.txt' % id)
+    cost = cols.loc[cols['description'] == 'dot', 'value'].values[0]
+    return cost
 
 # print the 2 tables side by side
 def printTablesBySide(t1, expected):

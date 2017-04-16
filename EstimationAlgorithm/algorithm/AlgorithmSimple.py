@@ -1,6 +1,6 @@
 from algorithm.ComonFunctions import *
-
-
+from imageLoader import request_raytracer
+import pandas
 #-----------------Project Functions------------------
 
 #this is the info that we need about each element on the matrix
@@ -56,9 +56,9 @@ def createTable(Xsize, Ysize):
 
 
 # Calculates the cost of render and update the prevision table
-def calculateAndInsert(x1, y1, x2, y2, realCostTable, previsionTable):
+def calculateAndInsert(x1, y1, x2, y2, realCostTable, previsionTable, fname):
     #time.sleep(0.1)
-    cost = SimulateRayTracer(x1, y1, x2, y2, realCostTable)
+    cost = RunRayTracer(x1, y1, x2, y2, realCostTable, fname)
     estimate = estimatecost(x1, y1, x2, y2, previsionTable)
     precision = resultPrecision(estimate,cost)
     insertLevel = (abs(x1 - x2) + 1) * (abs(y1 - y2) + 1)
@@ -68,19 +68,19 @@ def calculateAndInsert(x1, y1, x2, y2, realCostTable, previsionTable):
     Insert(x1, y1, x2, y2, previsionTable, cost)
 
 
-def calculateAndInsertWithouPrint(x1, y1, x2, y2, realCostTable, previsionTable):
-    cost = SimulateRayTracer(x1, y1, x2, y2, realCostTable)
+def calculateAndInsertWithouPrint(x1, y1, x2, y2, realCostTable, previsionTable, file):
+    cost = RunRayTracer(x1, y1, x2, y2, realCostTable, file)
     Insert(x1, y1, x2, y2, previsionTable, cost)
 
 
 # Runs samplesize times a random request over the current previsiontable state
 # and check its accuaricy comparing to real cost table
-def getStatistics(realCostTable, previsionTable,xsize,ysize,sampleSize):
+def getStatistics(realCostTable, previsionTable,xsize,ysize,sampleSize, fname):
     total = 0
     n = 0
     for x in range(0,sampleSize):
         window = randomImput(xsize, ysize)
-        cost = SimulateRayTracer(window[0], window[1], window[2], window[3], realCostTable)
+        cost = RunRayTracer(window[0], window[1], window[2], window[3], realCostTable, fname)
         estimate = estimatecost(window[0], window[1], window[2], window[3], previsionTable)
         precision = resultPrecision(estimate, cost)
         n += 1
