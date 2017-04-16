@@ -104,7 +104,6 @@ class PixelCalculator:
         return res
 
 
-# TODO: Even and odd lines/columns (and vice-versa) have a bug!!!
 def convert_to_square(m):
     n_lines = len(m)
     n_cols = len(m[0])
@@ -122,16 +121,49 @@ def convert_to_square(m):
     new_m = [[0 for x in range(sqr_side)] for y in range(sqr_side)]
 
     if lines_pad is not None:
-        cols_offset = 0 if no_padding else 1
-        for i in range(n_lines):
-            for j in range(n_cols):
-                new_m[i + lines_pad][j + cols_offset] = m[i][j]
+        if no_padding:
+            for i in range(n_lines):
+                for j in range(n_cols):
+                    new_m[i + lines_pad][j] = m[i][j]
+        else:
+            ratio = float(n_lines) / n_cols
+            for i in range(n_lines):
+                current = 0
+                used = 0
+                for j in range(sqr_side):
+                    if ratio > (1 - used):
+                        value = (1 - used) * m[i][current] + (used + ratio - 1) * m[i][current + 1]
+                        current += 1
+                        used = abs(ratio - used)
+
+                    else:
+                        value = ratio * m[i][current]
+                        used += ratio
+
+                    new_m[i + lines_pad][j] = value
 
     else:
-        lines_offset = 0 if no_padding else 1
-        for i in range(n_lines):
+        if no_padding:
+            for i in range(n_lines):
+                for j in range(n_cols):
+                    new_m[i][j + cols_pad] = m[i][j]
+
+        else:
+            ratio = float(n_cols) / n_lines
             for j in range(n_cols):
-                new_m[i + lines_offset][j + cols_pad] = m[i][j]
+                current = 0
+                used = 0
+                for i in range(sqr_side):
+                    if ratio > (1 - used):
+                        value = (1 - used) * m[current][j] + (used + ratio - 1) * m[current + 1][j]
+                        current += 1
+                        used = abs(ratio - used)
+
+                    else:
+                        value = ratio * m[current][j]
+                        used += ratio
+
+                    new_m[i][j + cols_pad] = value
 
     return new_m
 
@@ -187,14 +219,14 @@ To try out
 """
 
 n_lines = 5
-n_cols = 5
+n_cols = 9
 test_m = [[20 for x in range(n_cols)] for y in range(n_lines)]
 
 print "Test Matrix:"
 print_matrix(test_m)
 
-# print "\nConvert to square result:"
-# print_matrix(convert_to_square(test_m))
+print "\nConvert to square result:"
+print_matrix(convert_to_square(test_m))
 #
 # print "\nRevert translation result:"
 # revert_res = revert_translation(test_m, 5, 3, 0, 0)
@@ -203,5 +235,5 @@ print_matrix(test_m)
 # print "\nCombination of the previous two:"
 # print_matrix(convert_to_square(revert_res))
 
-print "\nScale to store result:"
-print_matrix(scale_to_store(4, test_m))
+# print "\nScale to store result:"
+# print_matrix(scale_to_store(6, test_m))
