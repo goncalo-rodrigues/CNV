@@ -11,8 +11,8 @@ def calculateTrace2types(vxsize, vysize, samplesize, numberounds,realTable,names
 
         for x in range(0,numberounds):
             inp = randomImput(vxsize,vysize)
-            calculateAndInsertWithouPrint(inp[0], inp[1], inp[2], inp[3], realTable, previsionTableSimple)
-            precision2 = getStatistics(realTable, previsionTableSimple, vxsize, vysize, samplesize)
+            calculateAndInsertWithouPrint(inp[0], inp[1], inp[2], inp[3], realTable, previsionTableSimple, namestr)
+            precision2 = getStatistics(realTable, previsionTableSimple, vxsize, vysize, samplesize, namestr)
             statisticsSimple.append(precision2)
         allSimple.append(statisticsSimple)
 
@@ -91,7 +91,7 @@ def calculateSeveralPlots2types(vxsize, vysize, maxcost, samplesize, numberounds
 XSIZE=10
 YSIZE=10
 MAXCOST = 5000
-SAMPLESIZE = 40
+SAMPLESIZE = 1
 NUMBERROUNDS = 20
 
 NTRACES = 5
