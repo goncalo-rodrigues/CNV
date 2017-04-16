@@ -25,12 +25,14 @@ def Insert(x1, y1, x2, y2, previsionTable, totalcost):
     insertLevel = (abs(x1-x2)+1)*(abs(y1-y2)+1)
     knownCost = 0
     nElemetLessPrecise = 0
+    lessPrecise = []
     for x in range(x1, x2+1):
         for y in range(y1, y2+1):
             if(previsionTable[y][x].level < insertLevel):
                 knownCost += previsionTable[y][x].cost
             else:
                 nElemetLessPrecise += 1
+                lessPrecise.append(previsionTable[y][x])
 
     costToSplit = totalcost - knownCost
     if costToSplit <0:
@@ -38,11 +40,9 @@ def Insert(x1, y1, x2, y2, previsionTable, totalcost):
 
     if nElemetLessPrecise >0:
         eachCost = costToSplit/nElemetLessPrecise
-        for x in range(x1, x2+1):
-            for y in range(y1, y2+1):
-                if(previsionTable[y][x].level > insertLevel):
-                    previsionTable[y][x].cost = eachCost
-                    previsionTable[y][x].level = insertLevel
+        for e in lessPrecise:
+            e.cost = eachCost
+            e.level = insertLevel
 
 
 # Creates a prevision table
