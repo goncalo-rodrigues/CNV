@@ -126,7 +126,7 @@ def convert_to_square(m):
                 for j in range(n_cols):
                     new_m[i + lines_pad][j] = m[i][j]
         else:
-            ratio = float(n_lines) / n_cols
+            ratio = float(n_cols) / sqr_side
             for i in range(n_lines):
                 current = 0
                 used = 0
@@ -134,7 +134,7 @@ def convert_to_square(m):
                     if ratio > (1 - used):
                         value = (1 - used) * m[i][current] + (used + ratio - 1) * m[i][current + 1]
                         current += 1
-                        used = abs(ratio - used)
+                        used = ratio + used - 1
 
                     else:
                         value = ratio * m[i][current]
@@ -149,7 +149,7 @@ def convert_to_square(m):
                     new_m[i][j + cols_pad] = m[i][j]
 
         else:
-            ratio = float(n_cols) / n_lines
+            ratio = float(n_lines) / sqr_side
             for j in range(n_cols):
                 current = 0
                 used = 0
@@ -157,7 +157,7 @@ def convert_to_square(m):
                     if ratio > (1 - used):
                         value = (1 - used) * m[current][j] + (used + ratio - 1) * m[current + 1][j]
                         current += 1
-                        used = abs(ratio - used)
+                        used = ratio + used - 1
 
                     else:
                         value = ratio * m[current][j]
@@ -168,7 +168,7 @@ def convert_to_square(m):
     return new_m
 
 
-# TODO: Same problem as the function before
+# FIXME: Lines and columns with different parity (independently from the other)
 def revert_translation(m, sl, sc, sloff, scoff):
     n_lines = len(m)
     n_cols = len(m[0])
@@ -218,22 +218,26 @@ def print_matrix(m):
 To try out
 """
 
-n_lines = 5
-n_cols = 9
-test_m = [[20 for x in range(n_cols)] for y in range(n_lines)]
+n_lines = 4
+n_cols = 5
+test_m = [[0 for x in range(n_cols)] for y in range(n_lines)]
+
+for i in range(n_lines - 2):
+    for j in range(n_cols - 2):
+        test_m[i + 1][j + 1] = 20
 
 print "Test Matrix:"
 print_matrix(test_m)
 
-print "\nConvert to square result:"
-print_matrix(convert_to_square(test_m))
+# print "\nConvert to square result:"
+# print_matrix(convert_to_square(test_m))
 #
-# print "\nRevert translation result:"
-# revert_res = revert_translation(test_m, 5, 3, 0, 0)
-# print_matrix(revert_res)
-#
-# print "\nCombination of the previous two:"
-# print_matrix(convert_to_square(revert_res))
+print "\nRevert translation result:"
+revert_res = revert_translation(test_m, 16, 7, 0, 0)
+print_matrix(revert_res)
+
+print "\nCombination of the previous two:"
+print_matrix(convert_to_square(revert_res))
 
 # print "\nScale to store result:"
 # print_matrix(scale_to_store(6, test_m))
