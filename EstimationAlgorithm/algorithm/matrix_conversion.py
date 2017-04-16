@@ -1,8 +1,7 @@
 import math
-from decimal import *
+from fractions import *
 
 
-# TODO: Change the iteration predicate to one related with side!!! (Avoids problems with fractional conversion)
 class PixelCalculator:
     def __init__(self, m, lst_pixel, lst_used, prop, side):
         self.m = m
@@ -10,28 +9,43 @@ class PixelCalculator:
         self.lst_used = lst_used
         self.prop = prop
         self.side = side
+        self.lb_side_counter = 1
 
     def next_pixel(self):
-        next_col = math.floor(self.lst_pixel[1] + self.lst_used[1] + self.prop)
+        next_col = int(math.floor(self.lst_pixel[1] + self.lst_used[1] + self.prop))
 
         lst_needed_pixels = []
+        needed_line = int(math.ceil(self.prop + self.lst_used[0]))
+        needed_col = int(math.ceil(self.prop + self.lst_used[1]))
 
-        # Needed to eliminate ceiling bug
-        needed_line = int(math.ceil(Decimal("{:.11f}".format(self.prop + self.lst_used[0]))))
-        needed_col = int(math.ceil(Decimal("{:.11f}".format(self.prop + self.lst_used[1]))))
+        # Guarantees that the indexes are inside the matrix
+        while self.lst_pixel[0] + needed_line > len(self.m):
+            needed_line -= 1
+        while self.lst_pixel[1] + needed_col > len(self.m):
+            needed_col -= 1
 
         # Gets the pixels needed for the calculation
         for i in range(needed_line):
+            l = self.lst_pixel[0] + i
+
             lst_needed_pixels.append([])
             for j in range(needed_col):
-                lst_needed_pixels[i].append((self.lst_pixel[0] + i, self.lst_pixel[1] + j))
+                c = self.lst_pixel[1] + j
+                lst_needed_pixels[i].append((l, c))
+
+        print_matrix(lst_needed_pixels)
+        print ""
 
         # Calculates the value for the lb pixel table
         res = 0
         for i in range(needed_line):
             if i == needed_line - 1:
-                tmp = math.modf(self.lst_pixel[0] + self.lst_used[0] + self.prop)[0]
-                use_line = tmp if tmp > 0 else 1
+                use_line = math.modf(self.lst_pixel[0] + self.lst_used[0] + self.prop)[0]
+                if use_line == 0:
+                    if self.side < len(self.m):
+                        use_line = 1
+                    else:
+                        use_line = self.prop
             elif i == 0:
                 use_line = 1 - self.lst_used[0]
             else:
@@ -39,8 +53,13 @@ class PixelCalculator:
 
             for j in range(needed_col):
                 if j == needed_col - 1:
-                    tmp = math.modf(self.lst_pixel[1] + self.lst_used[1] + self.prop)[0]
-                    use_col = tmp if tmp > 0 else 1
+                    use_col = math.modf(self.lst_pixel[1] + self.lst_used[1] + self.prop)[0]
+
+                    if use_col == 0:
+                        if self.side < len(self.m):
+                            use_col = 1
+                        else:
+                            use_col = self.prop
                 elif j == 0:
                     use_col = 1 - self.lst_used[1]
                 else:
@@ -49,24 +68,34 @@ class PixelCalculator:
                 line_m = int(lst_needed_pixels[i][j][0])
                 col_m = int(lst_needed_pixels[i][j][1])
 
-                # FIXME: This formula is not good (but only for lb > than received matrix)
-                res += use_line * use_col * self.m[line_m][col_m]
+                # FIXME: This result is not doing the expect thing!!!
+                res += float(use_line * use_col * self.m[line_m][col_m])
 
         # Updates the next pixel to be calculated
-        if next_col < len(self.m):
+        if next_col < len(self.m) and self.lb_side_counter < self.side:
             self.lst_pixel[1] = next_col
-            self.lst_used[1] = math.modf(self.lst_pixel[1] + self.lst_used[1] + self.prop)[0]
+            self.lst_used[1] = Fraction(self.lst_pixel[1] + self.lst_used[1] + self.prop)
+
+            self.lst_used[1] = Fraction(self.lst_used[1]._numerator % self.lst_used[1]._denominator,
+                                        self.lst_used[1]._denominator)
+
+            self.lb_side_counter += 1
 
         else:
-            next_line = math.floor(self.lst_pixel[0] + self.lst_used[0] + self.prop)
+            next_line = int(math.floor(self.lst_pixel[0] + self.lst_used[0] + self.prop))
 
             self.lst_pixel[0] = next_line
             self.lst_pixel[1] = 0
-            self.lst_used[0] = math.modf(self.lst_pixel[0] + self.lst_used[0] + self.prop)[0]
-            self.lst_used[1] = 0
+            self.lst_used[0] = Fraction(self.lst_pixel[0] + self.lst_used[0] + self.prop)
 
-        # print_matrix(lst_needed_pixels)
-        # print "Calculated result: " + str(res) + "\n"
+            self.lst_used[0] = Fraction(self.lst_used[0]._numerator % self.lst_used[0]._denominator,
+                                        self.lst_used[0]._denominator)
+
+            self.lst_used[1] = 0
+            self.lb_side_counter = 1
+
+            print "!!!!!!!!!!!!!! NEW LINE !!!!!!!!!!!!!!"
+            print ""
 
         return res
 
@@ -129,7 +158,7 @@ def scale_to_store(side, m):
     # Represents the load balancer matrix
     ld = [[-1 for x in range(side)] for y in range(side)]
 
-    pc = PixelCalculator(m, [0, 0], [0, 0], float(init_size) / float(side), side)
+    pc = PixelCalculator(m, [0, 0], [0, 0], Fraction(init_size, side), side)
 
     for i in range(side):
         for j in range(side):
@@ -153,8 +182,8 @@ def print_matrix(m):
 To try out
 """
 
-n_lines = 6
-n_cols = 6
+n_lines = 4
+n_cols = 4
 test_m = [[5 for x in range(n_cols)] for y in range(n_lines)]
 
 print "Test Matrix:"
@@ -171,4 +200,4 @@ print_matrix(test_m)
 # print_matrix(convert_to_square(revert_res))
 
 print "\nScale to store result:"
-print_matrix(scale_to_store(4, test_m))
+print_matrix(scale_to_store(10, test_m))
