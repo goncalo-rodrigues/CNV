@@ -33,14 +33,17 @@ class PixelCalculator:
                 c = self.lst_pixel[1] + j
                 lst_needed_pixels[i].append((l, c))
 
-        print_matrix(lst_needed_pixels)
-        print ""
-
         # Calculates the value for the lb pixel table
         res = 0
         for i in range(needed_line):
             if i == needed_line - 1:
-                use_line = math.modf(self.lst_pixel[0] + self.lst_used[0] + self.prop)[0]
+                use_line = math.modf(self.lst_used[0] + self.prop)
+
+                if use_line[1] == 0:
+                    use_line = self.prop
+                else:
+                    use_line = use_line[0]
+
                 if use_line == 0:
                     if self.side < len(self.m):
                         use_line = 1
@@ -53,7 +56,12 @@ class PixelCalculator:
 
             for j in range(needed_col):
                 if j == needed_col - 1:
-                    use_col = math.modf(self.lst_pixel[1] + self.lst_used[1] + self.prop)[0]
+                    use_col = math.modf(self.lst_used[1] + self.prop)
+
+                    if use_col[1] == 0:
+                        use_col = self.prop
+                    else:
+                        use_col = use_col[0]
 
                     if use_col == 0:
                         if self.side < len(self.m):
@@ -68,7 +76,6 @@ class PixelCalculator:
                 line_m = int(lst_needed_pixels[i][j][0])
                 col_m = int(lst_needed_pixels[i][j][1])
 
-                # FIXME: This result is not doing the expect thing!!!
                 res += float(use_line * use_col * self.m[line_m][col_m])
 
         # Updates the next pixel to be calculated
@@ -94,13 +101,9 @@ class PixelCalculator:
             self.lst_used[1] = 0
             self.lb_side_counter = 1
 
-            print "!!!!!!!!!!!!!! NEW LINE !!!!!!!!!!!!!!"
-            print ""
-
         return res
 
 
-# TODO: Even and odd lines/columns (and vice-versa) have a bug!!!
 def convert_to_square(m):
     n_lines = len(m)
     n_cols = len(m[0])
@@ -118,21 +121,54 @@ def convert_to_square(m):
     new_m = [[0 for x in range(sqr_side)] for y in range(sqr_side)]
 
     if lines_pad is not None:
-        cols_offset = 0 if no_padding else 1
-        for i in range(n_lines):
-            for j in range(n_cols):
-                new_m[i + lines_pad][j + cols_offset] = m[i][j]
+        if no_padding:
+            for i in range(n_lines):
+                for j in range(n_cols):
+                    new_m[i + lines_pad][j] = m[i][j]
+        else:
+            ratio = float(n_cols) / sqr_side
+            for i in range(n_lines):
+                current = 0
+                used = 0
+                for j in range(sqr_side):
+                    if ratio > (1 - used):
+                        value = (1 - used) * m[i][current] + (used + ratio - 1) * m[i][current + 1]
+                        current += 1
+                        used = ratio + used - 1
+
+                    else:
+                        value = ratio * m[i][current]
+                        used += ratio
+
+                    new_m[i + lines_pad][j] = value
 
     else:
-        lines_offset = 0 if no_padding else 1
-        for i in range(n_lines):
+        if no_padding:
+            for i in range(n_lines):
+                for j in range(n_cols):
+                    new_m[i][j + cols_pad] = m[i][j]
+
+        else:
+            ratio = float(n_lines) / sqr_side
             for j in range(n_cols):
-                new_m[i + lines_offset][j + cols_pad] = m[i][j]
+                current = 0
+                used = 0
+                for i in range(sqr_side):
+                    if ratio > (1 - used):
+                        value = (1 - used) * m[current][j] + (used + ratio - 1) * m[current + 1][j]
+                        current += 1
+                        used = ratio + used - 1
+
+                    else:
+                        value = ratio * m[current][j]
+                        used += ratio
+
+                    new_m[i][j + cols_pad] = value
 
     return new_m
 
 
-# TODO: Same problem as the function before
+# FIXME: Lines and columns with different parity (independently from the other)
 def revert_translation(m, sl, sc, sloff, scoff):
     n_lines = len(m)
     n_cols = len(m[0])
@@ -183,8 +219,12 @@ To try out
 """
 
 n_lines = 4
-n_cols = 4
-test_m = [[5 for x in range(n_cols)] for y in range(n_lines)]
+n_cols = 5
+test_m = [[0 for x in range(n_cols)] for y in range(n_lines)]
+
+for i in range(n_lines - 2):
+    for j in range(n_cols - 2):
+        test_m[i + 1][j + 1] = 20
 
 print "Test Matrix:"
 print_matrix(test_m)
@@ -192,12 +232,12 @@ print_matrix(test_m)
 # print "\nConvert to square result:"
 # print_matrix(convert_to_square(test_m))
 #
-# print "\nRevert translation result:"
-# revert_res = revert_translation(test_m, 5, 3, 0, 0)
-# print_matrix(revert_res)
-#
-# print "\nCombination of the previous two:"
-# print_matrix(convert_to_square(revert_res))
+print "\nRevert translation result:"
+revert_res = revert_translation(test_m, 16, 7, 0, 0)
+print_matrix(revert_res)
 
-print "\nScale to store result:"
-print_matrix(scale_to_store(10, test_m))
+print "\nCombination of the previous two:"
+print_matrix(convert_to_square(revert_res))
+
+# print "\nScale to store result:"
+# print_matrix(scale_to_store(6, test_m))
