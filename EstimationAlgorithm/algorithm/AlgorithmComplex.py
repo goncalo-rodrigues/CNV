@@ -46,12 +46,61 @@ def _round(val: float, ndigits=0):
 
 #-----------------Project Functions------------------
 
-#this is the info that we need about each element on the matrix
+
 class TableElement:
-    def __init__(self, cost, level, group):
+    def __init__(self, cost, level, group,x,y):
         self.cost = cost        #the predicted cost to comput this elemet
         self.level = level      #the precision of its cost (less is better)
         self.group = group      #the lowest level grout to wich it pertences
+        self.x = x
+        self.y = y
+
+
+class Group:
+    groupId = 0
+    cost = 0
+    level = 0
+    nElements = 0
+    members = []
+
+    def __init__(self,groupId):
+        self.groupId = groupId
+
+    def addElement(self,element):
+        self.members.append(element)
+        self.cost += element.cost
+        self.level += 1
+        self.nElements += 1
+
+
+    def removeElememt(self,elements):
+        for e in elements:
+            self.members.remove(e)
+            self.cost -= e.cost
+            self.level -= 1
+            self.nElements -= 1
+
+        if self.groupId != 0 & self.nElements != 0:
+            newCost = self.cost/self.nElements
+            for e in self.members:
+                e.cost = newCost
+                e.level = self.level
+
+
+# Creates a prevision table
+def createTable(Xsize, Ysize):
+    totalpixel = Xsize * Ysize + 1;
+    table = [[TableElement(0, totalpixel, 0, x, y) for x in range(Xsize)] for y in range(Ysize)]
+    return table
+
+def InitiateGroups(previsionTable):
+    group = Group(0)
+    groups = {}
+    for line in previsionTable:
+        for row in line:
+            group.addElement(row)
+    groups[0] = group
+    return groups
 
 
 # This is the query that gives an estimation about how much will cost
@@ -64,35 +113,37 @@ def estimatecost(x1, y1, x2, y2, previsionTable):
 
 
 # this is the method to be aplied after render in orde to improve prevision table
-def Insert(x1, y1, x2, y2, previsionTable, totalcost):
+def Insert(x1, y1, x2, y2, previsionTable, totalcost,groups):
     insertLevel = (abs(x1-x2)+1)*(abs(y1-y2)+1)
     knownCost = 0
     nElemetLessPrecise = 0
+    lessPrecise = []
     for x in range(x1, x2+1):
         for y in range(y1, y2+1):
             if(previsionTable[y][x].level < insertLevel):
                 knownCost += previsionTable[y][x].cost
             else:
                 nElemetLessPrecise += 1
+                lessPrecise.append(previsionTable[y][x])
 
     costToSplit = totalcost - knownCost
     if costToSplit <0:
         costToSplit = nElemetLessPrecise
 
     if nElemetLessPrecise >0:
+        newGroup = Group(len(groups))
+        groups[newGroup.groupId] = newGroup
         eachCost = costToSplit/nElemetLessPrecise
         for x in range(x1, x2+1):
             for y in range(y1, y2+1):
                 if(previsionTable[y][x].level > insertLevel):
                     previsionTable[y][x].cost = eachCost
                     previsionTable[y][x].level = insertLevel
+                    groups[previsionTable[y][x].group].removeElememt([previsionTable[y][x]])
+                    previsionTable[y][x].group = newGroup.groupId
+                    newGroup.addElement(previsionTable[y][x])
+                    #todo use an array of lessprecise instead
 
-
-# Creates a prevision table
-def createTable(Xsize, Ysize):
-    totalpixel = Xsize*Ysize+1;
-    table = [[TableElement(0,totalpixel,0) for x in range(Xsize)] for y in range(Ysize)]
-    return table
 
 
 # -------------      END    ------------------------------
@@ -159,9 +210,9 @@ def calculateAndInsert(x1, y1, x2, y2, realCostTable, previsionTable):
     Insert(x1, y1, x2, y2, previsionTable, cost)
 
 
-def calculateAndInsertWithouPrint(x1, y1, x2, y2, realCostTable, previsionTable):
+def calculateAndInsertWithouPrint(x1, y1, x2, y2, realCostTable, previsionTable, groups):
     cost = SimulateRayTracer(x1, y1, x2, y2, realCostTable)
-    Insert(x1, y1, x2, y2, previsionTable, cost)
+    Insert(x1, y1, x2, y2, previsionTable, cost, groups)
 
 
 # Runs samplesize times a random request over the current previsiontable state
@@ -231,43 +282,44 @@ def visualAlgorithm(vxsize,vysize,maxcost,samplesize,numberounds):
     print(statistics)
 
 
-def calculateTrace(vxsize, vysize, samplesize, numberounds,realTable,namestr=""):
+def calculateTraceComplex(vxsize, vysize, samplesize, numberounds,realTable,namestr=""):
     previsionTable = createTable(vxsize, vysize)
+    groups = InitiateGroups(previsionTable)
     statistics = []
     xplot = []
 
     for x in range(0,numberounds):
         inp = randomImput(vxsize,vysize)
-        calculateAndInsertWithouPrint(inp[0], inp[1], inp[2], inp[3], realTable, previsionTable)
+        calculateAndInsertWithouPrint(inp[0], inp[1], inp[2], inp[3], realTable, previsionTable,groups)
         precision1 = getStatistics(realTable, previsionTable, vxsize, vysize, samplesize)
         statistics.append(precision1)
         xplot.append(x)
     averagePrecision = np.average(statistics)
 
-    name = "SIMPLE "+ namestr +" table size:"+str(vxsize)+"x"+str(vysize)+"  average precision:" + str(averagePrecision) + "%\n"
+    name = "Complex "+ namestr +" table size:"+str(vxsize)+"x"+str(vysize)+"  average precision:" + str(averagePrecision) + "%\n"
     trace = go.Scatter(x=xplot, y=statistics,name =name)#,line=dict(shape='spline'))
     return trace
 
 
 # create a trace with the evolution of precision by the number of server requests
-def plotAlgorithm(vxsize, vysize, maxcost, samplesize, numberounds):
+def plotAlgorithmComplex(vxsize, vysize, maxcost, samplesize, numberounds):
     previsionTable = createTable(vxsize, vysize)
     realTable = createRandomTable(vxsize, vysize, maxcost)
-    return calculateTrace(vxsize, vysize, samplesize, numberounds,realTable)
+    return calculateTraceComplex(vxsize, vysize, samplesize, numberounds,realTable)
 
 
 
 
-def calculate1plot(vxsize, vysize, maxcost, samplesize, numberounds):
-    calculateSeveralPlots(vxsize, vysize, maxcost, samplesize, numberounds, 1, 1)
+def calculate1plotComplex(vxsize, vysize, maxcost, samplesize, numberounds):
+    calculateSeveralPlotsComplex(vxsize, vysize, maxcost, samplesize, numberounds, 1, 1)
 
 
-def calculateSeveralPlots(vxsize, vysize, maxcost, samplesize, numberounds, times, growquocient):
+def calculateSeveralPlotsComplex(vxsize, vysize, maxcost, samplesize, numberounds, times, growquocient):
     data = []
     for i in range(1,times+1):
         val = growquocient*i
         #data.append(plotAlgorithm(vxsize*val, vysize*val, maxcost, samplesize, numberounds))
-        data.append(plotAlgorithm(vxsize, vysize, maxcost*val, samplesize, numberounds))
+        data.append(plotAlgorithmComplex(vxsize*val, vysize*val, maxcost, samplesize, numberounds))
 
     title = "Precision by the number of requests changin window size.\n" + \
             "   sample size:" + str(samplesize) + "\n"
@@ -276,18 +328,18 @@ def calculateSeveralPlots(vxsize, vysize, maxcost, samplesize, numberounds, time
         "layout": Layout(title=title)
     })
 
-def calculatePlotsOnImage(vxsize, vysize, fname, samplesize, numberounds):
+def calculatePlotsOnImageComplex(vxsize, vysize, fname, samplesize, numberounds):
     previsionTable = createTable(vxsize, vysize)
     realTable = print_image(fname, (100, 100), (vxsize, vysize))
     print("got file table:" + fname)
-    trace = calculateTrace(vxsize, vysize, samplesize, numberounds, realTable, fname)
+    trace = calculateTraceComplex(vxsize, vysize, samplesize, numberounds, realTable, fname)
     return trace
 
 
 def calculatePlotsOnImageList(vxsize, vysize, filesname, samplesize, numberounds, times, growquocient):
     data = []
     for fname in filesname:
-        trace = calculatePlotsOnImage(vxsize, vysize, fname, samplesize, numberounds)
+        trace = calculatePlotsOnImageComplex(vxsize, vysize, fname, samplesize, numberounds)
         data.append(trace)
         #t = threading.Thread(target=calculatePlotsOnImage, args=(vxsize, vysize, fname, samplesize, numberounds))
         #t.start()
@@ -312,6 +364,6 @@ GROWQUOCIENT =1
 files =['test01.txt','test02.txt','test03.txt','test04.txt','test05.txt']
 
 #visualAlgorithm(XSIZE,YSIZE,MAXCOST,SAMPLESIZE,NUMBERROUNDS)
-#calculateSeveralPlots(XSIZE, YSIZE, MAXCOST, SAMPLESIZE, NUMBERROUNDS,NTRACES,GROWQUOCIENT)
-calculatePlotsOnImageList(XSIZE, YSIZE, files, SAMPLESIZE, NUMBERROUNDS,NTRACES,GROWQUOCIENT)
+calculateSeveralPlotsComplex(XSIZE, YSIZE, MAXCOST, SAMPLESIZE, NUMBERROUNDS,NTRACES,GROWQUOCIENT)
+#calculatePlotsOnImageList(XSIZE, YSIZE, files, SAMPLESIZE, NUMBERROUNDS,NTRACES,GROWQUOCIENT)
 

@@ -141,7 +141,7 @@ def print_image(file, resolution=(100,100), grid=(10,10)):
     plt.imshow(img)
     plt.axis('off')
     plt.show()
-    '''
+    
 print ("test01.txt")
 print(print_image('test01.txt'))
 print ("test02.txt")
@@ -152,4 +152,4 @@ print ("test04.txt")
 print(print_image('test04.txt'))
 print ("test05.txt")
 print(print_image('test05.txt'))
-
+'''
