@@ -33,12 +33,37 @@ public class RequestThread implements Runnable {
         if(args.containsKey("f") && args.containsKey("sc") && args.containsKey("sr") && args.containsKey("wc") &&
                 args.containsKey("wr") && args.containsKey("coff") && args.containsKey("roff")) {
 
-          checkRequestedFile(args.get("f"));
+          boolean cont = true;
 
-          String[] args_rt = {args.get("f"), "../" + args.get("f") + ".res",
-                  args.get("sc"), args.get("sr"), args.get("wc"), args.get("wr"), args.get("coff"), args.get("roff")};
+          int sc = Integer.parseInt(args.get("sc"));
+          int sr = Integer.parseInt(args.get("sr"));
+          int wc = Integer.parseInt(args.get("wc"));
+          int wr = Integer.parseInt(args.get("wr"));
+          int coff = Integer.parseInt(args.get("coff"));
+          int roff = Integer.parseInt(args.get("roff"));
 
-          raytracer.Main.main(args_rt);
+          if(wc > sc) {
+            response += "\nwc > sc. Please try again.";
+            cont = false;
+          } else if(wr > sr) {
+            response += "\nwr > sr. Please try again.";
+            cont = false;
+          } else if(coff > sc - wc) {
+            response += "\ncoff > sc - wc. Please try again.";
+            cont = false;
+          } else if(roff > sr - wr) {
+            response += "\nroff > sr - wr. Please try again.";
+            cont = false;
+          }
+
+          if(cont) {
+            checkRequestedFile(args.get("f"));
+
+            String[] args_rt = {args.get("f"), "../" + args.get("f") + ".res",
+                    args.get("sc"), args.get("sr"), args.get("wc"), args.get("wr"), args.get("coff"), args.get("roff")};
+
+            raytracer.Main.main(args_rt);
+          }
         }
 
         else
