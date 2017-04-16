@@ -183,12 +183,12 @@ def calculatePlotsOnImageList(vxsize, vysize, filesname, samplesize, numberounds
     })
 
 
-'''
+"""
 XSIZE=10
 YSIZE=10
 MAXCOST = 10
 SAMPLESIZE = 50
-NUMBERROUNDS = 100
+NUMBERROUNDS = 20
 
 NTRACES = 10
 GROWQUOCIENT =1
@@ -198,4 +198,4 @@ files =['test01.txt','test02.txt','test03.txt','test04.txt','test05.txt']
 #visualAlgorithm(XSIZE,YSIZE,MAXCOST,SAMPLESIZE,NUMBERROUNDS)
 #calculateSeveralPlots(XSIZE, YSIZE, MAXCOST, SAMPLESIZE, NUMBERROUNDS,NTRACES,GROWQUOCIENT)
 calculatePlotsOnImageList(XSIZE, YSIZE, files, SAMPLESIZE, NUMBERROUNDS,NTRACES,GROWQUOCIENT)
-'''
+"""
