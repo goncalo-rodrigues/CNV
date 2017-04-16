@@ -126,7 +126,7 @@ def convert_to_square(m):
                 for j in range(n_cols):
                     new_m[i + lines_pad][j] = m[i][j]
         else:
-            ratio = float(n_cols) / sqr_side
+            ratio = Fraction(n_cols, sqr_side)
             for i in range(n_lines):
                 current = 0
                 used = 0
@@ -149,7 +149,7 @@ def convert_to_square(m):
                     new_m[i][j + cols_pad] = m[i][j]
 
         else:
-            ratio = float(n_lines) / sqr_side
+            ratio = Fraction(n_lines, sqr_side)
             for j in range(n_cols):
                 current = 0
                 used = 0
@@ -168,22 +168,17 @@ def convert_to_square(m):
     return new_m
 
 
-# FIXME: Lines and columns with different parity (independently from the other)
 def revert_translation(m, sl, sc, sloff, scoff):
     n_lines = len(m)
     n_cols = len(m[0])
-
-    lines_pad = (sl - n_lines) / 2
-    cols_pad = (sc - n_cols) / 2
-    add_lines = lines_pad + sloff
-    add_cols = cols_pad + scoff
+    max_line_index = sl - 1
 
     new_m = [[0 for x in range(sc)] for y in range(sl)]
 
     # Copies the content to the new one
     for i in range(n_lines):
         for j in range(n_cols):
-            new_m[i + add_lines][j + add_cols] = m[i][j]
+            new_m[max_line_index - i - sloff][j + scoff] = m[i][j]
 
     return new_m
 
@@ -220,24 +215,21 @@ To try out
 
 n_lines = 4
 n_cols = 5
-test_m = [[0 for x in range(n_cols)] for y in range(n_lines)]
-
-for i in range(n_lines - 2):
-    for j in range(n_cols - 2):
-        test_m[i + 1][j + 1] = 20
+test_m = [[1 for x in range(n_cols)] for y in range(n_lines)]
 
 print "Test Matrix:"
 print_matrix(test_m)
 
 # print "\nConvert to square result:"
 # print_matrix(convert_to_square(test_m))
-#
+
 print "\nRevert translation result:"
-revert_res = revert_translation(test_m, 16, 7, 0, 0)
+revert_res = revert_translation(test_m, 7, 6, 1, 1)
 print_matrix(revert_res)
 
 print "\nCombination of the previous two:"
-print_matrix(convert_to_square(revert_res))
+res = convert_to_square(revert_res)
+print_matrix(res)
 
-# print "\nScale to store result:"
-# print_matrix(scale_to_store(6, test_m))
+print "\nScale to store result:"
+print_matrix(scale_to_store(6, res))
