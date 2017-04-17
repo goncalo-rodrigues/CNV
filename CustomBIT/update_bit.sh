@@ -2,10 +2,10 @@
 
 curr_dir=$(pwd)
 
-cd "../BIT/samples"
+cd "/home/ec2-user/BIT/samples"
 javac *.java
 
-cd "../../WebServer/raytracer-master"
+cd "/home/ec2-user/raytracer-master"
 make clean
 make
 
@@ -15,3 +15,4 @@ java StatisticsToolToFile -dynamic src/raytracer/pigments src/raytracer/pigments
 java StatisticsToolToFile -dynamic src/raytracer/shapes/ src/raytracer/pigments
 
 cd $curr_dir
+
