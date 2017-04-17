@@ -113,7 +113,7 @@ test05=[[  8797,  8830,  5654,  4262,  4262,  4262,  4262,  4230,  4222,
 
 
 def print_image(file, resolution=(100,100), grid=(10,10)):
-    if file == "test01.txt":
+    '''if file == "test01.txt":
         return test01
     elif file == "test02.txt":
         return test02
@@ -122,11 +122,11 @@ def print_image(file, resolution=(100,100), grid=(10,10)):
     elif file == "test04.txt":
         return test04
     elif file == "test05.txt":
-        return test05
+        return test05'''
 
-    #run_result = run_raytracer(file, resolution, grid)
-    #normalized_output_method = get_statistics('dot', run_result, grid)
-    #return normalized_output_method
+    run_result = run_raytracer(file, resolution, grid)
+    normalized_output_method = get_statistics('dot', run_result, grid)
+    return normalized_output_method
     #print(normalized_output_method)
     '''
     normalized_output_target = get_statistics('totalinstr', run_result, grid)

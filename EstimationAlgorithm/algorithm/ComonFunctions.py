@@ -17,13 +17,13 @@ ENDC = '\033[0m'
 
 #------this is not mine---
 
-def _should_round_down(val: float):
+def _should_round_down(val):
     if val < 0:
         return ((val * -1) % 1) < 0.5
     return (val % 1) < 0.5
 
 
-def _round(val: float, ndigits = 0):
+def _round(val, ndigits = 0):
     if ndigits > 0:
         val *= 10 ** (ndigits - 1)
 
@@ -38,7 +38,7 @@ def _round(val: float, ndigits = 0):
 
     if ndigits > 0:
         rounded_value /= 10 ** (ndigits - 1)
-
+    
     return rounded_value
 
 #--------------------------
@@ -47,7 +47,7 @@ def _round(val: float, ndigits = 0):
 
 # return the Preciso of the gess
 def resultPrecision(v1, v2):
-    # abs(esperado - real) / real
+    return abs(v1 - v2)
     if v1 == v2:
         return 100
     elif v1 ==0 or v2 == 0:
@@ -91,8 +91,8 @@ def RunRayTracer(x1, y1, x2, y2, realCostTable, fname):
     x2 = x2 + 1
     width = x2-x1
     height = y2-y1
-    id = request_raytracer(fname, len(realCostTable)*10,len(realCostTable)*10,height*10, width*10, y1*10, x1*10)
-    cols = pandas.read_csv('~/testcnv/raytracer-master/dynamic_%d.txt' % id)
+    id = request_raytracer(fname, len(realCostTable),len(realCostTable),height, width, height - y2, x1)
+    cols = pandas.read_csv('~/Projects/CNV/raytracer-master/dynamic_%d.txt' % id)
     cost = cols.loc[cols['description'] == 'dot', 'value'].values[0]
     return cost
 

@@ -1,4 +1,4 @@
-from algorithm.AlgorithmSimple import *
+from algorithm.FakeSimple import *
 from algorithm.AlgorithmComplex import *
 
 
@@ -46,11 +46,11 @@ def calculateTrace2types(vxsize, vysize, samplesize, numberounds,realTable,names
     averagePrecisionComplex =np.average(statisticsComplex)
     averagePrecisionSimple = np.average(statisticsSimple)
 
-    nameComplex = "Complex "+ namestr +" table size:"+str(vxsize)+"x"+str(vysize)+"  average precision:" +\
+    nameComplex = "C"+ namestr +" table size:"+str(vxsize)+"x"+str(vysize)+"  average precision:" +\
                   str(averagePrecisionComplex) + "%\n"
     traceComplex = go.Scatter(x=xplot, y=statisticsComplex,name =nameComplex)
 
-    nameSimple = "Simple " + namestr + " table size:" + str(vxsize) + "x" + str(vysize) + "  average precision:" + \
+    nameSimple = "S" + namestr + " table size:" + str(vxsize) + "x" + str(vysize) + "  average precision:" + \
                   str(averagePrecisionSimple) + "%\n"
     traceSimple = go.Scatter(x=xplot, y=statisticsSimple, name=nameSimple)
 
@@ -105,10 +105,10 @@ def calculateSeveralPlots2types(vxsize, vysize, maxcost, samplesize, numberounds
 
 
 
-XSIZE=10
-YSIZE=10
+XSIZE=40
+YSIZE=40
 MAXCOST = 5000
-SAMPLESIZE = 50
+SAMPLESIZE = 20
 NUMBERROUNDS = 20
 
 NTRACES = 2
