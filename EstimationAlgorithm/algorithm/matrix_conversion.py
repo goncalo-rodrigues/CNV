@@ -172,13 +172,14 @@ def revert_translation(m, sl, sc, sloff, scoff):
     n_lines = len(m)
     n_cols = len(m[0])
     max_line_index = sl - 1
+    max_line_index_first = n_lines - 1
 
     new_m = [[0 for x in range(sc)] for y in range(sl)]
 
     # Copies the content to the new one
     for i in range(n_lines):
         for j in range(n_cols):
-            new_m[max_line_index - i - sloff][j + scoff] = m[i][j]
+            new_m[max_line_index - i - sloff][j + scoff] = m[max_line_index_first - i][j]
 
     return new_m
 
@@ -215,7 +216,7 @@ To try out
 
 n_lines = 4
 n_cols = 5
-test_m = [[1 for x in range(n_cols)] for y in range(n_lines)]
+test_m = [[x * y + 1 for x in range(n_cols)] for y in range(n_lines)]
 
 print "Test Matrix:"
 print_matrix(test_m)
@@ -224,7 +225,7 @@ print_matrix(test_m)
 # print_matrix(convert_to_square(test_m))
 
 print "\nRevert translation result:"
-revert_res = revert_translation(test_m, 7, 6, 1, 1)
+revert_res = revert_translation(test_m, 7, 6, 0, 0)
 print_matrix(revert_res)
 
 print "\nCombination of the previous two:"
