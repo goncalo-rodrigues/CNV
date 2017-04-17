@@ -50,7 +50,7 @@ def calculatePlotsOnImageList2types(vxsize, vysize, filesname, samplesize, numbe
     for fname in filesname:
         for i in range(1, times + 1):
             val = growquocient * i
-            realTable = print_image(fname, (100, 100), (vxsize*val, vysize*val))
+            realTable = print_image(fname, (100*i, 100*i), (vxsize*val, vysize*val))
             print("got file table:" + fname+" Output"+str(vxsize*val)+"x"+str(vysize*val))
             trace = calculateTrace2types(vxsize*val, vysize*val, samplesize, numberounds, realTable, fname)
             data.append(trace[0])
@@ -91,13 +91,13 @@ def calculateSeveralPlots2types(vxsize, vysize, maxcost, samplesize, numberounds
 XSIZE=10
 YSIZE=10
 MAXCOST = 5000
-SAMPLESIZE = 1
+SAMPLESIZE = 3
 NUMBERROUNDS = 20
 
 NTRACES = 5
 GROWQUOCIENT =1
 
-files =['test01.txt','test02.txt','test03.txt','test04.txt','test05.txt']
+files =['test01.txt','test02.txt']
 calculatePlotsOnImageList2types(XSIZE, YSIZE, files, SAMPLESIZE, NUMBERROUNDS,NTRACES,GROWQUOCIENT)
 
 #calculateSeveralPlots2types(XSIZE, YSIZE, MAXCOST, SAMPLESIZE, NUMBERROUNDS,NTRACES,GROWQUOCIENT)

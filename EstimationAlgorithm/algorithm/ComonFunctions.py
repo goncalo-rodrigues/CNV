@@ -91,7 +91,7 @@ def RunRayTracer(x1, y1, x2, y2, realCostTable, fname):
     x2 = x2 + 1
     width = x2-x1
     height = y2-y1
-    id = request_raytracer(fname, len(realCostTable),len(realCostTable),height, width, height - y2, x1)
+    id = request_raytracer(fname, len(realCostTable)*10,len(realCostTable)*10,height*10, width*10, y1*10, x1*10)
     cols = pandas.read_csv('~/testcnv/raytracer-master/dynamic_%d.txt' % id)
     cost = cols.loc[cols['description'] == 'dot', 'value'].values[0]
     return cost
