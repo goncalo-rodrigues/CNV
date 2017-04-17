@@ -8,4 +8,4 @@ RenderFarm
 
 # Running the Web server
 * Run: ./local.sh
-* This file will start both the instrumentation and the application.
+* This script will start both the instrumentation and the application.
