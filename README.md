@@ -9,3 +9,8 @@ RenderFarm
 # Running the Web server
 * Run: ./local.sh
 * This script will start both the instrumentation and the application.
+
+# Binaries
+* The instrumentation tool's binaries are on BIT/samples
+* The Web Server's binaries are on raytracer-master
+* The raytracers' binaries are on the corresponding directories
