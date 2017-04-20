@@ -40,9 +40,9 @@ make clean
 make
 
 # Reinstruments the raytracer code
-java -cp $clpth StatisticsToolToFile -dynamic src/raytracer/ src/raytracer/
-java -cp $clpth StatisticsToolToFile -dynamic src/raytracer/pigments src/raytracer/pigments
-java -cp $clpth StatisticsToolToFile -dynamic src/raytracer/shapes/ src/raytracer/pigments
+#java -cp $clpth StatisticsToolToFile -dynamic src/raytracer/ src/raytracer/
+#java -cp $clpth StatisticsToolToFile -dynamic src/raytracer/pigments src/raytracer/pigments
+#java -cp $clpth StatisticsToolToFile -dynamic src/raytracer/shapes/ src/raytracer/pigments
 #java -cp $clpth StatisticsFunctionCallsToFile -dynamic src/raytracer/ src/raytracer/
 #java -cp $clpth StatisticsFunctionCallsToFile -dynamic src/raytracer/pigments src/raytracer/pigments
 #java -cp $clpth StatisticsFunctionCallsToFile -dynamic src/raytracer/shapes/ src/raytracer/pigments

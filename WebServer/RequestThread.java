@@ -23,12 +23,15 @@ public class RequestThread implements Runnable {
     try {
       String query = t.getRequestURI().getQuery();
       Map<String, String> args = queryToMap(query);
-      String response = String.valueOf(Thread.currentThread().getId());
+      String response = "";
+
       //for (Map.Entry e : args.entrySet()) {
-        //response += e.getKey() + "\t" + e.getValue() + "\n";
+      //response += e.getKey() + "\t" + e.getValue() + "\n";
       //}
       //response += "###";
 
+      response += "<!doctype html><head></head><body>";
+      response = String.valueOf(Thread.currentThread().getId());
       try {
         if(args.containsKey("f") && args.containsKey("sc") && args.containsKey("sr") && args.containsKey("wc") &&
                 args.containsKey("wr") && args.containsKey("coff") && args.containsKey("roff")) {
@@ -58,11 +61,12 @@ public class RequestThread implements Runnable {
 
           if(cont) {
             checkRequestedFile(args.get("f"));
-
-            String[] args_rt = {args.get("f"), "../" + args.get("f") + ".res",
+            String outName = Thread.currentThread().getId() + ".bmp";
+            String[] args_rt = {args.get("f"), outName,
                     args.get("sc"), args.get("sr"), args.get("wc"), args.get("wr"), args.get("coff"), args.get("roff")};
 
             raytracer.Main.main(args_rt);
+            response += "<br> <a href=\"images/"+ outName + "\">See image here</a>";
           }
         }
 
@@ -74,6 +78,9 @@ public class RequestThread implements Runnable {
         response += "\nFile was not found. Please try again.";
       }
 
+      response += "</body></html>";
+
+      t.getResponseHeaders().set("Content-type", "text/html");
       t.sendResponseHeaders(200, response.length());
       OutputStream os = t.getResponseBody();
       os.write(response.getBytes());
