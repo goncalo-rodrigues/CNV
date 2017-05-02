@@ -4,6 +4,7 @@ import BIT.highBIT.Routine;
 
 import java.io.*;
 import java.util.Enumeration;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -11,7 +12,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class StatisticsDotMethodTool {
     private static PrintStream out = null;
-    private static ConcurrentHashMap<Long, Long> metricMap = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<Long, Long> metricMap = new ConcurrentHashMap<Long, Long>();
 
     /* main reads in all the files class files present in the input directory,
      * instruments them, and outputs them to the specified output directory.
@@ -46,10 +47,10 @@ public class StatisticsDotMethodTool {
 
         try {
             PrintWriter writer = new PrintWriter("dynamic_" + threadId + ".txt", "UTF-8");
-            writer.println(String.valueOf(m_count.get()));
+            writer.println(String.valueOf(metricMap.get(threadId)));
             writer.flush();
             writer.close();
-            System.out.println("method dot was executed " + m_count + " times.");
+            System.out.println("method dot was executed " + metricMap.get(threadId) + " times.");
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (UnsupportedEncodingException e) {
