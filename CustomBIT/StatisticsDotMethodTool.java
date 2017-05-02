@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class StatisticsDotMethodTool {
     private static PrintStream out = null;
-    private static AtomicLong m_count = new AtomicLong(0);
+    private static ConcurrentHashMap<Long, Long> metricMap = new ConcurrentHashMap<>();
 
     /* main reads in all the files class files present in the input directory,
      * instruments them, and outputs them to the specified output directory.
@@ -60,6 +60,8 @@ public class StatisticsDotMethodTool {
     }
 
     public static void mcount(int incr) {
-        m_count.incrementAndGet();
+        Long threadId = new Long(Thread.currentThread().getId());
+        Long metric = metricMap.get(threadId);
+        metricMap.put(threadId, metric == null? 0 : metric + incr);
     }
 }
