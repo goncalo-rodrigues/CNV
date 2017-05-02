@@ -4,6 +4,7 @@ import BIT.highBIT.Routine;
 
 import java.io.*;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -12,7 +13,8 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class StatisticsDotMethodTool {
     private static PrintStream out = null;
-    private static ConcurrentHashMap<Long, Long> metricMap = new ConcurrentHashMap<Long, Long>();
+//    private static HashMap<Long, Long> metricMap = new HashMap<Long, Long>();
+    private static long metric[] = new long[100000000];
 
     /* main reads in all the files class files present in the input directory,
      * instruments them, and outputs them to the specified output directory.
@@ -43,14 +45,17 @@ public class StatisticsDotMethodTool {
 
     public static void printICount(String foo) {
 
-        long threadId = Thread.currentThread().getId();
+        int threadId = (int) Thread.currentThread().getId();
+        int remainder = threadId % 100;
 
         try {
             PrintWriter writer = new PrintWriter("dynamic_" + threadId + ".txt", "UTF-8");
-            writer.println(String.valueOf(metricMap.get(threadId)));
+            writer.println(String.valueOf(metric[remainder]));
             writer.flush();
             writer.close();
-            System.out.println("method dot was executed " + metricMap.get(threadId) + " times.");
+            System.out.println("method dot was executed " + metric[remainder] + " times.");
+            metric[remainder] = 0;
+            
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (UnsupportedEncodingException e) {
@@ -61,8 +66,11 @@ public class StatisticsDotMethodTool {
     }
 
     public static void mcount(int incr) {
-        Long threadId = Thread.currentThread().getId();
-        Long metric = metricMap.get(threadId);
-        metricMap.put(threadId, metric == null? 0 : metric + incr);
+//        Long threadId = Thread.currentThread().getId();
+//        Long metric = metricMap.get(threadId);
+//        metricMap.put(threadId, metric == null? 0 : metric + incr);
+
+        int threadId = (int) Thread.currentThread().getId();
+        metric[threadId % 100000000]++;
     }
 }
