@@ -47,6 +47,10 @@ make
 #java -cp $clpth StatisticsFunctionCallsToFile -dynamic src/raytracer/pigments src/raytracer/pigments
 #java -cp $clpth StatisticsFunctionCallsToFile -dynamic src/raytracer/shapes/ src/raytracer/pigments
 
+java -cp $clpth StatisticsDotMethodTool src/raytracer/ src/raytracer/
+java -cp $clpth StatisticsDotMethodTool src/raytracer/pigments src/raytracer/pigments
+java -cp $clpth StatisticsDotMethodTool src/raytracer/shapes/ src/raytracer/pigments
+
 cd $init_dir
 
 # Raytracer stuff
