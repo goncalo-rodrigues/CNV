@@ -29,6 +29,8 @@ public class PrevisionAlgorithm {
                             int wc, int wr, int coof,int roof){
         int requestPixels = wr*wc;
         float propotion = requestPixels / 10000;
+
+        //TODO @Nuno the conversion is here
         for(File file:files)
             if(file.name.equals(fileName))
                 return (int) (propotion *(float) estimateCost(0,0,39,39,file));//TODO fix
@@ -52,6 +54,7 @@ public class PrevisionAlgorithm {
         int requestPixels = wr*wc;
         float propotion = requestPixels / 10000;
 
+        //TODO @Nuno the conversion is here
         for(File file : files)
             if(file.name.equals(fileName))
                 insertData(0 ,0 ,9,9,(int)(cost/propotion),file);//TODO fix
