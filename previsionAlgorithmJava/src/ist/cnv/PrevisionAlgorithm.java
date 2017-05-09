@@ -49,9 +49,12 @@ public class PrevisionAlgorithm {
 
     public void insertData(String fileName, int sc, int sr,
                             int wc, int wr, int coof,int roof,int cost){
+        int requestPixels = wr*wc;
+        float propotion = requestPixels / 10000;
+
         for(File file : files)
             if(file.name.equals(fileName))
-                insertData(0 ,0 ,9,9,cost,file);//TODO fix
+                insertData(0 ,0 ,9,9,(int)(cost/propotion),file);//TODO fix
     }
 
 
