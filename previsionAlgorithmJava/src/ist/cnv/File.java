@@ -7,9 +7,11 @@ public class File {
     String name;
     public int[][] cost;
     public int[][] area;
+    DynamoDBConnection dynamoConnection;
 
-    public File(String name){
+    public File(String name,DynamoDBConnection dynamoConnection){
         this.name = name;
+        this.dynamoConnection = dynamoConnection;
         //TODO check if already exists in DynamoDB
         cost = new int[40][40];
         area = new int[40][40];
@@ -18,6 +20,10 @@ public class File {
         for(int x = 0; x <= 39; x++)
             for(int y = 0; y <= 39; y++)
                 area[y][x]=total;
+    }
+
+    public void save(){
+        dynamoConnection.saveImageData(name,cost,area);
     }
 
 

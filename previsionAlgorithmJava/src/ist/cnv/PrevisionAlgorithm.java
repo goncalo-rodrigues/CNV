@@ -2,7 +2,6 @@ package ist.cnv;
 
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import static java.lang.Math.abs;
 
@@ -11,10 +10,12 @@ import static java.lang.Math.abs;
  */
 public class PrevisionAlgorithm {
     ArrayList<File> files = new ArrayList<>();
+    DynamoDBConnection dynamo;
 
     public PrevisionAlgorithm(ArrayList<String> filesNames){
+        dynamo = new DynamoDBConnection();
         for(String fileName: filesNames)
-            files.add(new File(fileName));
+            files.add(new File(fileName,dynamo));
 
     }
 
@@ -56,8 +57,11 @@ public class PrevisionAlgorithm {
 
         //TODO @Nuno the conversion is here
         for(File file : files)
-            if(file.name.equals(fileName))
-                insertData(0 ,0 ,9,9,(int)(cost/propotion),file);//TODO fix
+            if(file.name.equals(fileName)) {
+                insertData(0, 0, 9, 9, (int) (cost / propotion), file);//TODO fix
+                file.save();
+            }
+
     }
 
 
