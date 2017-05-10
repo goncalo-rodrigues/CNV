@@ -9,11 +9,11 @@ import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
-import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.PutItemOutcome;
-import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.model.*;
 import com.amazonaws.services.dynamodbv2.util.TableUtils;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by ant on 09-05-2017.
@@ -65,25 +65,29 @@ public class DynamoDBConnection {
         }
     }
 
-    public void saveImageData(String name,int[][] cost,int[][] area){
-        //Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
-        //item.put("name", new AttributeValue(name));
-        //item.put("cost",new AttributeValue().);
-        //item.put("area",area);
-        //PutItemRequest putItemRequest = new PutItemRequest(TABLE_NAME,item);
-        //PutItemResult putItemResult = dynamoDB.putItem(putItemRequest);
-        //System.out.println("Result: " + putItemResult);
-        if(true)//TODO remove this
-            return;
-        Table table = dynamo.getTable(TABLE_NAME);
-        Item item = new Item().withString("name", "foo").withList("cost",cost).withList("area",area);
+    public void saveImageData(String name, String cost, String area){
+        Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
+
+        item.put(TABLE_KEY_NAME, new AttributeValue(name));
+        item.put("cost",new AttributeValue(cost));
+        item.put("area",new AttributeValue(area));
+        System.out.println(item);
+        System.out.println(item.keySet());
+        PutItemRequest putItemRequest = new PutItemRequest(TABLE_NAME,item);
+        PutItemResult putItemResult = dynamoDB.putItem(putItemRequest);
+        System.out.println("Result: " + putItemResult);
+
+        /*Table table = dynamo.getTable(TABLE_NAME);
+        Item item = new Item().withString("name", name).withList("cost",cost).withList("area",area);
+        item.withBinarySet("cost",cost);
         PutItemOutcome result = table.putItem(item);
-        System.out.println(result);
+        System.out.println(result);*/
 
     }
 
 
+    public String[] getImageData(String name){
 
-
+    }
 
 }

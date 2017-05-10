@@ -8,22 +8,50 @@ public class File {
     public int[][] cost;
     public int[][] area;
     DynamoDBConnection dynamoConnection;
+    static int TSIZE = 40;
 
     public File(String name,DynamoDBConnection dynamoConnection){
         this.name = name;
         this.dynamoConnection = dynamoConnection;
         //TODO check if already exists in DynamoDB
-        cost = new int[40][40];
-        area = new int[40][40];
+        cost = new int[TSIZE][TSIZE];
+        area = new int[TSIZE][TSIZE];
 
-        int total = 41*41;
-        for(int x = 0; x <= 39; x++)
-            for(int y = 0; y <= 39; y++)
+        int total = (TSIZE+1)*(TSIZE+1);
+        for(int x = 0; x < TSIZE; x++)
+            for(int y = 0; y < TSIZE ; y++)
                 area[y][x]=total;
     }
 
+    public void load(){
+
+
+    }
+
     public void save(){
-        dynamoConnection.saveImageData(name,cost,area);
+        String costString = intListToString(cost);
+        String areaString = intListToString(area);
+        dynamoConnection.saveImageData(name,costString,areaString);
+    }
+
+    private String intListToString(int[][] intArray){
+        String output = "";
+        for(int x = 0; x < TSIZE; x++)
+            for(int y = 0; y < TSIZE ; y++)
+                output += intArray[y][x]+";";
+        return output;
+    }
+
+    private int[][] stringToIntList(String arrayString){
+        int[][] array = new int[TSIZE][TSIZE];
+        int i = 0;
+        String[] list = arrayString.split(";");
+        for(int x = 0; x < TSIZE; x++)
+            for(int y = 0; y < TSIZE ; y++){
+                array[y][x]= Integer.parseInt(list[i]);
+                i++;
+            }
+        return array;
     }
 
 
