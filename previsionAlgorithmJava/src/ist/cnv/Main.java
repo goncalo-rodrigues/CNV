@@ -7,12 +7,15 @@ public class Main {
     public static void main(String[] args) {
         ArrayList<String> imagesNames = new ArrayList<>();
         imagesNames.add("img1");
+        imagesNames.add("img2");
 	    PrevisionAlgorithm oracle = new PrevisionAlgorithm(imagesNames);
         System.out.println(oracle.estimateCost("img1", 100, 100,
                 100,100, 0,0));
 
-        oracle.insertData("img1",10,10,100,
-        100, 0,0,1000);
+        oracle.insertData("img1",50,50,100,
+        100, 0,0,100000);
+        oracle.insertData("img2",8,8,100,
+                100, 10,10,9000);
         System.out.println(oracle.estimateCost("img1", 10, 10,
                 100,100, 0,0));
 

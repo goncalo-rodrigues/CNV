@@ -14,18 +14,24 @@ public class File {
         this.name = name;
         this.dynamoConnection = dynamoConnection;
         //TODO check if already exists in DynamoDB
-        cost = new int[TSIZE][TSIZE];
-        area = new int[TSIZE][TSIZE];
-
-        int total = (TSIZE+1)*(TSIZE+1);
-        for(int x = 0; x < TSIZE; x++)
-            for(int y = 0; y < TSIZE ; y++)
-                area[y][x]=total;
+        load();
     }
 
     public void load(){
+        String result[] = dynamoConnection.getImageData(this.name);
+        if (result != null) {
+            cost = stringToIntList(result[0]);
+            area = stringToIntList(result[1]);
+        }
+        else{
+            cost = new int[TSIZE][TSIZE];
+            area = new int[TSIZE][TSIZE];
 
-
+            int total = (TSIZE+1)*(TSIZE+1);
+            for(int x = 0; x < TSIZE; x++)
+                for(int y = 0; y < TSIZE ; y++)
+                    area[y][x]=total;
+        }
     }
 
     public void save(){

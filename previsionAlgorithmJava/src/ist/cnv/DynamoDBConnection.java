@@ -9,6 +9,9 @@ import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
+import com.amazonaws.services.dynamodbv2.document.GetItemOutcome;
+import com.amazonaws.services.dynamodbv2.document.Item;
+import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.model.*;
 import com.amazonaws.services.dynamodbv2.util.TableUtils;
 
@@ -73,6 +76,7 @@ public class DynamoDBConnection {
         item.put("area",new AttributeValue(area));
         System.out.println(item);
         System.out.println(item.keySet());
+        
         PutItemRequest putItemRequest = new PutItemRequest(TABLE_NAME,item);
         PutItemResult putItemResult = dynamoDB.putItem(putItemRequest);
         System.out.println("Result: " + putItemResult);
@@ -87,7 +91,13 @@ public class DynamoDBConnection {
 
 
     public String[] getImageData(String name){
-
+        Table table = dynamo.getTable(TABLE_NAME);
+        GetItemOutcome outcome = table.getItemOutcome(TABLE_KEY_NAME, name);
+        Item item = outcome.getItem();
+        if(item == null)
+            return null;
+        String output[]= {item.getString("cost"),item.getString("area")};
+        return output;
     }
 
 }
