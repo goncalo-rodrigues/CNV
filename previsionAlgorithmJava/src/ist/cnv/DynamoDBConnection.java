@@ -76,7 +76,7 @@ public class DynamoDBConnection {
         item.put("area",new AttributeValue(area));
         System.out.println(item);
         System.out.println(item.keySet());
-        
+
         PutItemRequest putItemRequest = new PutItemRequest(TABLE_NAME,item);
         PutItemResult putItemResult = dynamoDB.putItem(putItemRequest);
         System.out.println("Result: " + putItemResult);
