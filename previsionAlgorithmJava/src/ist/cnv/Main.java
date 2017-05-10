@@ -23,6 +23,8 @@ public class Main {
 
         System.out.println(oracle.estimateCost("img1", 10, 10,
                 1000,1000, 0,0));
+
+        oracle.saveAll();
     }
 }
 

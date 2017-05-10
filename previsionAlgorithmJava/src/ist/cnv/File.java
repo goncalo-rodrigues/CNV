@@ -4,11 +4,15 @@ package ist.cnv;
  * Created by ant on 09-05-2017.
  */
 public class File {
+    private static int TSIZE = 40;
+    private static int SAVESUNTILSEND = 5;
     String name;
     public int[][] cost;
     public int[][] area;
     DynamoDBConnection dynamoConnection;
-    static int TSIZE = 40;
+
+    private int acumulatedSaves = 0;
+
 
     public File(String name,DynamoDBConnection dynamoConnection){
         this.name = name;
@@ -35,10 +39,20 @@ public class File {
     }
 
     public void save(){
+        acumulatedSaves ++;
+        if (acumulatedSaves >= SAVESUNTILSEND) {
+            forceSave();
+            acumulatedSaves = 0;
+        }
+    }
+
+    public void forceSave(){
         String costString = intListToString(cost);
         String areaString = intListToString(area);
         dynamoConnection.saveImageData(name,costString,areaString);
     }
+
+
 
     private String intListToString(int[][] intArray){
         String output = "";

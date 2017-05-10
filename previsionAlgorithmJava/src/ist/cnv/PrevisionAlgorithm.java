@@ -54,18 +54,24 @@ public class PrevisionAlgorithm {
                             int wc, int wr, int coof,int roof,int cost){
         int requestPixels = wr*wc;
         float propotion = requestPixels / 10000;
+        boolean changed;
 
         //TODO @Nuno the conversion is here
         for(File file : files)
             if(file.name.equals(fileName)) {
-                insertData(0, 0, 9, 9, (int) (cost / propotion), file);//TODO fix
-                file.save();
+                changed = insertData(0, 0, 20, 20, (int) (cost / propotion), file);//TODO fix
+                if(changed)
+                    file.save();
             }
+    }
 
+    public void saveAll(){
+        for(File file : files)
+            file.forceSave();
     }
 
 
-    private void insertData(int x1,int y1, int x2, int y2, int requestCost,File file){
+    private boolean insertData(int x1,int y1, int x2, int y2, int requestCost,File file){
         int totalArea = (abs(x1-x2))*(abs(y1-y2));
         int knownCost = 0;
         int nElemetsToChange = 0;
@@ -97,6 +103,7 @@ public class PrevisionAlgorithm {
         }
         System.out.println("totalArea:"+totalArea+"\nnElemetsToChange:"+nElemetsToChange+"\ncostToSplit: "+costToSplit+
                 "\neachCost:"+eachCost);
+        return nElemetsToChange>0;
     }
 
 
