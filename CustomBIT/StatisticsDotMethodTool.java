@@ -14,7 +14,8 @@ import java.util.concurrent.atomic.AtomicLong;
 public class StatisticsDotMethodTool {
     private static PrintStream out = null;
 //    private static HashMap<Long, Long> metricMap = new HashMap<Long, Long>();
-    private static long metric[] = new long[100000000];
+    private static long metric[] = new long[1000];
+    private static long times[] = new long[1000];
 
     /* main reads in all the files class files present in the input directory,
      * instruments them, and outputs them to the specified output directory.
@@ -36,6 +37,9 @@ public class StatisticsDotMethodTool {
                     if (routine.getMethodName().equals("dot")) {
                         routine.addBefore("StatisticsDotMethodTool", "mcount", new Integer(1));
                     }
+                    if (routine.getMethodName().equals("main")) {
+                        routine.addBefore("StatisticsDotMethodTool", "resetcount", 0);
+                    }
                 }
                 ci.addAfter("StatisticsDotMethodTool", "printICount", ci.getClassName());
                 ci.write(argv[1] + System.getProperty("file.separator") + infilename);
@@ -46,15 +50,16 @@ public class StatisticsDotMethodTool {
     public static void printICount(String foo) {
 
         int threadId = (int) Thread.currentThread().getId();
-        int remainder = threadId % 100;
+        int remainder = threadId % metric.length;
 
         try {
             PrintWriter writer = new PrintWriter("dynamic_" + threadId + ".txt", "UTF-8");
             writer.println(String.valueOf(metric[remainder]));
             writer.flush();
             writer.close();
-            System.out.println("method dot was executed " + metric[remainder] + " times.");
-            metric[remainder] = 0;
+            times[remainder] = System.nanoTime() - times[remainder];
+            System.out.println("method dot was executed " + metric[remainder] + " times and took " +
+                    + (times[remainder])*1e-9 + "seconds");
             
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -65,12 +70,27 @@ public class StatisticsDotMethodTool {
 
     }
 
+    public static void resetcount(int ignored) {
+        int threadId = (int) Thread.currentThread().getId();
+        metric[threadId % metric.length]=0;
+        times[threadId % times.length] = System.nanoTime();
+    }
+
     public static void mcount(int incr) {
 //        Long threadId = Thread.currentThread().getId();
 //        Long metric = metricMap.get(threadId);
 //        metricMap.put(threadId, metric == null? 0 : metric + incr);
 
         int threadId = (int) Thread.currentThread().getId();
-        metric[threadId % 100000000]++;
+        metric[threadId % 1000]++;
+    }
+
+    public static long getMetric() {
+        int threadId = (int) Thread.currentThread().getId();
+        return metric[threadId % metric.length];
+    }
+    public static long getTime() {
+        int threadId = (int) Thread.currentThread().getId();
+        return times[threadId % times.length];
     }
 }

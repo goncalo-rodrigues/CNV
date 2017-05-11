@@ -1,18 +1,17 @@
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.Map;
 import java.util.HashMap;
-
 import com.sun.net.httpserver.HttpExchange;
 
 import raytracer.Main;
 
 public class RequestThread implements Runnable {
+  private static String statsFilename = "stats.txt";
+  private static boolean debug = true;
   private HttpExchange t = null;
 
   public RequestThread(HttpExchange t) {
@@ -20,6 +19,7 @@ public class RequestThread implements Runnable {
   }
 
   public void run() {
+      int sc=0, sr=0, wc=0, wr=0, coff=0, roff = 0;
     try {
       String query = t.getRequestURI().getQuery();
       Map<String, String> args = queryToMap(query);
@@ -38,12 +38,12 @@ public class RequestThread implements Runnable {
 
           boolean cont = true;
 
-          int sc = Integer.parseInt(args.get("sc"));
-          int sr = Integer.parseInt(args.get("sr"));
-          int wc = Integer.parseInt(args.get("wc"));
-          int wr = Integer.parseInt(args.get("wr"));
-          int coff = Integer.parseInt(args.get("coff"));
-          int roff = Integer.parseInt(args.get("roff"));
+          sc = Integer.parseInt(args.get("sc"));
+          sr = Integer.parseInt(args.get("sr"));
+          wc = Integer.parseInt(args.get("wc"));
+          wr = Integer.parseInt(args.get("wr"));
+          coff = Integer.parseInt(args.get("coff"));
+          roff = Integer.parseInt(args.get("roff"));
 
           if(wc > sc) {
             response += "\nwc > sc. Please try again.";
@@ -66,6 +66,8 @@ public class RequestThread implements Runnable {
                     args.get("sc"), args.get("sr"), args.get("wc"), args.get("wr"), args.get("coff"), args.get("roff")};
 
             raytracer.Main.main(args_rt);
+            response += "<br> Metric:" + StatisticsDotMethodTool.getMetric() + "<br>";
+            response += "Time taken:" + StatisticsDotMethodTool.getTime()*1e-9 + "<br>";
             response += "<br> <a href=\"images/"+ outName + "\">See image here</a>";
           }
         }
@@ -79,12 +81,30 @@ public class RequestThread implements Runnable {
       }
 
       response += "</body></html>";
-
+      
       t.getResponseHeaders().set("Content-type", "text/html");
       t.sendResponseHeaders(200, response.length());
       OutputStream os = t.getResponseBody();
       os.write(response.getBytes());
       os.close();
+      if (debug) {
+        try {
+          File f = new File(statsFilename);
+          if(!f.exists() && !f.isDirectory())
+            {
+                    f.createNewFile();
+                    Files.write(Paths.get(statsFilename), "sc,sr,wc,wr,coff,roff,metric,time\n".getBytes(),
+                            StandardOpenOption.WRITE);
+            }
+          Files.write(Paths.get(statsFilename),
+                  String.format("%d,%d,%d,%d,%d,%d,%d,%f\n",
+                          sc, sr, wc, wr, coff, roff, StatisticsDotMethodTool.getMetric(),StatisticsDotMethodTool.getTime()*1e-9).getBytes(),
+                  StandardOpenOption.APPEND);
+        }catch (IOException e) {
+            //exception handling left as an exercise for the reader
+        }
+      }
+
     } catch(IOException e) {
       e.printStackTrace();
     }
