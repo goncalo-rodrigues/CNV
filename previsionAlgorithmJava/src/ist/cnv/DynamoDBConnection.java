@@ -49,7 +49,8 @@ public class DynamoDBConnection {
             CreateTableRequest createTableRequest = new CreateTableRequest().withTableName(TABLE_NAME)
                     .withKeySchema(new KeySchemaElement().withAttributeName(TABLE_KEY_NAME).withKeyType(KeyType.HASH))
                     .withAttributeDefinitions(new AttributeDefinition().withAttributeName(TABLE_KEY_NAME).withAttributeType(ScalarAttributeType.S))
-                    .withProvisionedThroughput(new ProvisionedThroughput().withReadCapacityUnits(1L).withWriteCapacityUnits(5L));//TODO fix values
+                    .withProvisionedThroughput(new ProvisionedThroughput().withReadCapacityUnits(1L)
+                            .withWriteCapacityUnits(2L));//TODO: The values are for testing. Before delivery, increase.
 
             // Create table if it does not exist yet
             TableUtils.createTableIfNotExists(dynamoDB, createTableRequest);

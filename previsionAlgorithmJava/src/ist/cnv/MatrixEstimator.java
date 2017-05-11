@@ -1,5 +1,9 @@
 package ist.cnv;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import static java.lang.Math.ceil;
 import static java.lang.Math.floor;
 
 /**
@@ -28,9 +32,80 @@ public class MatrixEstimator {
 
     public double nextPixel() {
         long nextCol = (long) floor(prop.add(pixel[COLUMN]).add(used[COLUMN]).toDouble());
+        List<List<long[]>> neededPixels = new ArrayList<>();
+        long neededLine = (long) ceil(prop.add(used[LINE]).toDouble());
+        long neededCol = (long) ceil(prop.add(used[COLUMN]).toDouble());
 
-        // This should be treated as an error value
-        return -1;
+        // Gets the needed pixels for the calculation
+        for(long i = 0; i < neededLine; i++) {
+            List<long[]> tmpList = new ArrayList<>();
+            neededPixels.add(tmpList);
+
+            long l = pixel[LINE] + i;
+            for(long j = 0; j < neededCol; j++)
+                tmpList.add(new long[] {l, pixel[LINE] + j});
+        }
+
+        // Calculates the value for the load balancer table
+        double res = 0;
+        for(long i = 0; i < neededLine; i++) {
+            Fraction useLine;
+
+            if(i == neededLine - 1) {
+                useLine = used[LINE].add(prop);
+
+                if(useLine.toDouble() < 0)
+                    useLine = prop;
+                else
+                    useLine.removeInteger();
+
+                if(useLine.toDouble() == 0) {
+                    if(SIDE < matrix[0].length)
+                        useLine = new Fraction(1,1);
+                    else
+                        useLine = prop;
+                }
+            }
+
+            else if(i == 0)
+                useLine = used[LINE].inverseSub(1);
+            else
+                useLine = new Fraction(1,1);
+
+            for(long j = 0; j < neededCol; j++) {
+                Fraction useCol;
+                if(j == neededCol - 1) {
+                    useCol = used[COLUMN].add(prop);
+
+                    if(useCol.toDouble() < 0)
+                        useCol = prop;
+                    else
+                        useCol.removeInteger();
+
+                    if(useCol.toDouble() == 0) {
+                        if(SIDE < matrix[0].length)
+                            useCol = new Fraction(1, 1);
+                        else
+                            useCol = prop;
+                    }
+                }
+
+                else if(j == 0)
+                    useCol = used[COLUMN].inverseSub(1);
+                else
+                    useCol = new Fraction(1, 1);
+
+                long lineM = neededPixels.get((int) i).get((int) j)[LINE];
+                long colM = neededPixels.get((int) i).get((int) j)[COLUMN];
+
+                res += useLine.mul(useCol).mul(matrix[ (int) lineM][(int) colM]).toDouble();
+            }
+        }
+
+        // TODO: Add the "Updates the next pixel to be calculated" part
+
+
+        return res;
     }
 
     // FIXME: Just for testing purposes!!!
@@ -39,96 +114,4 @@ public class MatrixEstimator {
         MatrixEstimator me = new MatrixEstimator(matrix);
         me.nextPixel();
     }
-
-//    Algorithm in python
-//    next_col = int(math.floor(self.lst_pixel[1] + self.lst_used[1] + self.prop))
-//
-//    lst_needed_pixels = []
-//    needed_line = int(math.ceil(self.prop + self.lst_used[0]))
-//    needed_col = int(math.ceil(self.prop + self.lst_used[1]))
-//
-//            # Guarantees that the indexes are inside the matrix
-//        while self.lst_pixel[0] + needed_line > len(self.m):
-//    needed_line -= 1
-//            while self.lst_pixel[1] + needed_col > len(self.m):
-//    needed_col -= 1
-//
-//            # Gets the pixels needed for the calculation
-//        for i in range(needed_line):
-//    l = self.lst_pixel[0] + i
-//
-//            lst_needed_pixels.append([])
-//                    for j in range(needed_col):
-//    c = self.lst_pixel[1] + j
-//    lst_needed_pixels[i].append((l, c))
-//
-//            # Calculates the value for the lb pixel table
-//    res = 0
-//            for i in range(needed_line):
-//            if i == needed_line - 1:
-//    use_line = math.modf(self.lst_used[0] + self.prop)
-//
-//            if use_line[1] == 0:
-//    use_line = self.prop
-//                else:
-//    use_line = use_line[0]
-//
-//            if use_line == 0:
-//            if self.side < len(self.m):
-//    use_line = 1
-//            else:
-//    use_line = self.prop
-//    elif i == 0:
-//    use_line = 1 - self.lst_used[0]
-//            else:
-//    use_line = 1
-//
-//            for j in range(needed_col):
-//            if j == needed_col - 1:
-//    use_col = math.modf(self.lst_used[1] + self.prop)
-//
-//            if use_col[1] == 0:
-//    use_col = self.prop
-//                    else:
-//    use_col = use_col[0]
-//
-//            if use_col == 0:
-//            if self.side < len(self.m):
-//    use_col = 1
-//            else:
-//    use_col = self.prop
-//    elif j == 0:
-//    use_col = 1 - self.lst_used[1]
-//            else:
-//    use_col = 1
-//
-//    line_m = int(lst_needed_pixels[i][j][0])
-//    col_m = int(lst_needed_pixels[i][j][1])
-//
-//    res += float(use_line * use_col * self.m[line_m][col_m])
-//
-//        # Updates the next pixel to be calculated
-//        if next_col < len(self.m) and self.lb_side_counter < self.side:
-//    self.lst_pixel[1] = next_col
-//    self.lst_used[1] = Fraction(self.lst_pixel[1] + self.lst_used[1] + self.prop)
-//
-//    self.lst_used[1] = Fraction(self.lst_used[1]._numerator % self.lst_used[1]._denominator,
-//                                self.lst_used[1]._denominator)
-//
-//    self.lb_side_counter += 1
-//
-//            else:
-//    next_line = int(math.floor(self.lst_pixel[0] + self.lst_used[0] + self.prop))
-//
-//    self.lst_pixel[0] = next_line
-//    self.lst_pixel[1] = 0
-//    self.lst_used[0] = Fraction(self.lst_pixel[0] + self.lst_used[0] + self.prop)
-//
-//    self.lst_used[0] = Fraction(self.lst_used[0]._numerator % self.lst_used[0]._denominator,
-//                                self.lst_used[0]._denominator)
-//
-//    self.lst_used[1] = 0
-//    self.lb_side_counter = 1
-//
-//            return res
 }
