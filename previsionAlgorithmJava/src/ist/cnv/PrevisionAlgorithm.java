@@ -80,7 +80,7 @@ public class PrevisionAlgorithm {
 
         for(int x = x1; x <= x2; x++){
             for(int y = y1; y <= y2; y++){
-                if(file.area[y][x] < totalArea)
+                if(file.area[y][x] <= totalArea)
                     knownCost += file.cost[y][x];
                 else
                     nElemetsToChange += 1;

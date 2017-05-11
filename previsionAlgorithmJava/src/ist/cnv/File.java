@@ -6,6 +6,7 @@ package ist.cnv;
 public class File {
     private static int TSIZE = 40;
     private static int SAVESUNTILSEND = 5;
+    private static int STARTINGCOST = 100; //TODO refine this number see all the images result and get a good etimation
     String name;
     public int[][] cost;
     public int[][] area;
@@ -33,8 +34,10 @@ public class File {
 
             int total = (TSIZE+1)*(TSIZE+1);
             for(int x = 0; x < TSIZE; x++)
-                for(int y = 0; y < TSIZE ; y++)
-                    area[y][x]=total;
+                for(int y = 0; y < TSIZE ; y++) {
+                    area[y][x] = total;
+                    cost[y][x] = STARTINGCOST;
+                }
         }
     }
 
