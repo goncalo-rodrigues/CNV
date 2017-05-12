@@ -1,5 +1,7 @@
 package ist.cnv;
 
+import com.amazonaws.services.dynamodbv2.xspec.L;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -102,10 +104,64 @@ public class MatrixEstimator {
             }
         }
 
-        // TODO: Add the "Updates the next pixel to be calculated" part
+        // Updates the next pixel to be calculated
+        if(nextCol < matrix[0].length && sideCounter < SIDE) {
+            pixel[COLUMN] = nextCol;
+            used[COLUMN] = used[COLUMN].add(pixel[COLUMN]).add(prop);
+            used[COLUMN].removeInteger();
+            sideCounter++;
+        }
 
+        else {
+            long nextLine = (long) floor(used[LINE].add(pixel[LINE]).add(prop).toDouble());
+            pixel = new long[] {nextLine, 0};
+
+            used[LINE] = used[LINE].add(pixel[LINE]).add(prop);
+            used[LINE].removeInteger();
+
+            used[COLUMN] = new Fraction(0,1);
+            sideCounter = 1;
+        }
 
         return res;
+    }
+
+    public void convertToSquare() {
+        long nLines = matrix.length;
+        long nCols = matrix[0].length;
+        boolean noPadding = (nLines + nCols) % 2 == 0;
+
+        // Non-initialized vars
+        double linesPad = -1;
+        double colsPad = -1;
+        long sqrSide = -1;
+
+        if(nCols > nLines) {
+            sqrSide = noPadding ? nCols : (nCols + 1);
+            linesPad = (double) sqrSide/2 - (double) nLines/2;
+        }
+
+        else {
+            sqrSide = noPadding ? nLines : (nLines + 1);
+            colsPad = (double) sqrSide/2 - (double) nCols/2;
+        }
+
+        int[][] tmpMatrix = new int[(int) sqrSide][(int) sqrSide];
+
+        if(linesPad > -1) {
+            if(noPadding) {
+                for(int i = 0; i < nLines; i++)
+                    for(int j = 0; j < nCols; j++)
+                        tmpMatrix[(int) (i + linesPad)][j] = matrix[i][j];
+            }
+
+            else {
+                Fraction ratio = new Fraction(nCols, sqrSide);
+                for(int i = 0; i < nLines; i++) {
+                    //TODO: Continue here!!!
+                }
+            }
+        }
     }
 
     // FIXME: Just for testing purposes!!!
