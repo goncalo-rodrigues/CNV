@@ -2,7 +2,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.math.BigInteger;
 import java.nio.file.*;
+import java.util.ArrayList;
+import java.util.Locale;
 import java.util.Map;
 import java.util.HashMap;
 import com.sun.net.httpserver.HttpExchange;
@@ -13,6 +16,7 @@ public class RequestThread implements Runnable {
   private static String statsFilename = "stats.txt";
   private static boolean debug = true;
   private HttpExchange t = null;
+  private static ArrayList<String> keys;
 
   public RequestThread(HttpExchange t) {
     this.t = t;
@@ -84,26 +88,61 @@ public class RequestThread implements Runnable {
       
       t.getResponseHeaders().set("Content-type", "text/html");
       t.sendResponseHeaders(200, response.length());
-      OutputStream os = t.getResponseBody();
-      os.write(response.getBytes());
-      os.close();
-      if (debug) {
+
+      boolean all_metrics = false;
+      if (debug && !all_metrics) {
         try {
           File f = new File(statsFilename);
           if(!f.exists() && !f.isDirectory())
             {
                     f.createNewFile();
-                    Files.write(Paths.get(statsFilename), "sc,sr,wc,wr,coff,roff,metric,time\n".getBytes(),
+                    Files.write(Paths.get(statsFilename), "sc,sr,wc,wr,coff,roff,metric,metric2,time\n".getBytes(),
                             StandardOpenOption.WRITE);
             }
           Files.write(Paths.get(statsFilename),
-                  String.format("%d,%d,%d,%d,%d,%d,%d,%f\n",
-                          sc, sr, wc, wr, coff, roff, StatisticsDotMethodTool.getMetric(),StatisticsDotMethodTool.getTime()*1e-9).getBytes(),
+                  String.format(Locale.US, "%d,%d,%d,%d,%d,%d,%d,%d,%f\n",
+                          sc, sr, wc, wr, coff, roff,
+                          StatisticsDotMethodTool.getMetric(),
+                          StatisticsDotMethodTool.getMetric2(),
+                          StatisticsDotMethodTool.getTime()*1e-9).getBytes(),
                   StandardOpenOption.APPEND);
         }catch (IOException e) {
             //exception handling left as an exercise for the reader
         }
       }
+      if (debug && all_metrics) {
+
+          try {
+              File f = new File(statsFilename);
+              HashMap<String, BigInteger> methodMap = StatisticsToolToFile.getMethodMap();
+              if((!f.exists() && !f.isDirectory()) || keys==null)
+              {
+                  f.createNewFile();
+                  keys = new ArrayList<>(methodMap.keySet());
+                  String columnNames = "sc,sr,wc,wr,coff,roff,size,instrs";
+                  for (String key: keys) {
+                      columnNames += ","+key;
+                  }
+                  columnNames += "\n";
+                  Files.write(Paths.get(statsFilename), columnNames.getBytes(),
+                          StandardOpenOption.WRITE);
+              }
+              String columnVals = String.format(Locale.US, "%d,%d,%d,%d,%d,%d,%d,%d",
+                      sc,sr,wc,wr,coff,roff,wc*wr,StatisticsToolToFile.getInstrs());
+              for (String key: keys) {
+                  columnVals += ","+ (methodMap.containsKey(key) ? methodMap.get(key).toString() : "0");
+              }
+              columnVals += "\n";
+              Files.write(Paths.get(statsFilename),columnVals.getBytes(),
+                      StandardOpenOption.APPEND);
+          }catch (IOException e) {
+              //exception handling left as an exercise for the reader
+          }
+
+      }
+        OutputStream os = t.getResponseBody();
+        os.write(response.getBytes());
+        os.close();
 
     } catch(IOException e) {
       e.printStackTrace();

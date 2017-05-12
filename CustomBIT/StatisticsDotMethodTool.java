@@ -15,7 +15,9 @@ public class StatisticsDotMethodTool {
     private static PrintStream out = null;
 //    private static HashMap<Long, Long> metricMap = new HashMap<Long, Long>();
     private static long metric[] = new long[1000];
+    private static long metric2[] = new long[1000];
     private static long times[] = new long[1000];
+    private static long instr[] = new long[1000];
 
     /* main reads in all the files class files present in the input directory,
      * instruments them, and outputs them to the specified output directory.
@@ -37,9 +39,17 @@ public class StatisticsDotMethodTool {
                     if (routine.getMethodName().equals("dot")) {
                         routine.addBefore("StatisticsDotMethodTool", "mcount", new Integer(1));
                     }
+                    if (routine.getMethodName().equals("readPoint")) {
+                        System.out.println("found you");
+                        routine.addBefore("StatisticsDotMethodTool", "m2count", new Integer(1));
+                    }
                     if (routine.getMethodName().equals("main")) {
                         routine.addBefore("StatisticsDotMethodTool", "resetcount", 0);
                     }
+//                    for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
+//                        BasicBlock bb = (BasicBlock) b.nextElement();
+//                        bb.addBefore("StatisticsDotMethodTool", "m2count", new Integer(bb.size()));
+//                    }
                 }
                 ci.addAfter("StatisticsDotMethodTool", "printICount", ci.getClassName());
                 ci.write(argv[1] + System.getProperty("file.separator") + infilename);
@@ -52,20 +62,9 @@ public class StatisticsDotMethodTool {
         int threadId = (int) Thread.currentThread().getId();
         int remainder = threadId % metric.length;
 
-        try {
-            PrintWriter writer = new PrintWriter("dynamic_" + threadId + ".txt", "UTF-8");
-            writer.println(String.valueOf(metric[remainder]));
-            writer.flush();
-            writer.close();
-            times[remainder] = System.nanoTime() - times[remainder];
-            System.out.println("method dot was executed " + metric[remainder] + " times and took " +
-                    + (times[remainder])*1e-9 + "seconds");
-            
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        times[remainder] = System.nanoTime() - times[remainder];
+        System.out.println("method dot was executed " + metric[remainder] + " times and took " +
+                + (times[remainder])*1e-9 + "seconds");
 
 
     }
@@ -73,6 +72,7 @@ public class StatisticsDotMethodTool {
     public static void resetcount(int ignored) {
         int threadId = (int) Thread.currentThread().getId();
         metric[threadId % metric.length]=0;
+        metric2[threadId % metric2.length]=0;
         times[threadId % times.length] = System.nanoTime();
     }
 
@@ -85,9 +85,22 @@ public class StatisticsDotMethodTool {
         metric[threadId % 1000]++;
     }
 
+    public static void m2count(int incr) {
+//        Long threadId = Thread.currentThread().getId();
+//        Long metric = metricMap.get(threadId);
+//        metricMap.put(threadId, metric == null? 0 : metric + incr);
+
+        int threadId = (int) Thread.currentThread().getId();
+        metric2[threadId % 1000]++;
+    }
+
     public static long getMetric() {
         int threadId = (int) Thread.currentThread().getId();
         return metric[threadId % metric.length];
+    }
+    public static long getMetric2() {
+        int threadId = (int) Thread.currentThread().getId();
+        return metric2[threadId % metric2.length];
     }
     public static long getTime() {
         int threadId = (int) Thread.currentThread().getId();

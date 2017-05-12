@@ -215,13 +215,13 @@ public class StatisticsToolToFile
 						}
 						for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
 							BasicBlock bb = (BasicBlock) b.nextElement();
-//							bb.addBefore("StatisticsToolToFile", "dynInstrCount", new Integer(bb.size()));
+							bb.addBefore("StatisticsToolToFile", "dynInstrCount", new Integer(bb.size()));
 							bb.addBefore("StatisticsToolToFile", "dynMethodBBCount", caller+ " "  + bb.size());
 						}
 					}
 
-					if(filename.equals("Main.class"))
-						ci.addAfter("StatisticsToolToFile", "printDynamic", "null");
+//					if(filename.equals("Main.class"))
+//						ci.addAfter("StatisticsToolToFile", "printDynamic", "null");
 
 					ci.write(out_filename);
 				}
@@ -229,6 +229,14 @@ public class StatisticsToolToFile
 		}
 
 
+
+	public static HashMap<String, BigInteger> getMethodMap() {
+		return dyn.get(Thread.currentThread().getId()).getMethodMap();
+	}
+
+	public static long getInstrs() {
+        return dyn.get(Thread.currentThread().getId()).getInstrCount();
+    }
 
     public static synchronized void printDynamic(String foo)
 		{
