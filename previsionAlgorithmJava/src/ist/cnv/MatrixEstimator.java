@@ -5,8 +5,7 @@ import com.amazonaws.services.dynamodbv2.xspec.L;
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.lang.Math.ceil;
-import static java.lang.Math.floor;
+import static java.lang.Math.*;
 
 /**
  * Created on 11-05-2017.
@@ -158,9 +157,107 @@ public class MatrixEstimator {
             else {
                 Fraction ratio = new Fraction(nCols, sqrSide);
                 for(int i = 0; i < nLines; i++) {
-                    //TODO: Continue here!!!
+                    long current = 0;
+                    Fraction used = new Fraction(0,1);
+                    Fraction value;
+
+                    for(int j = 0; j < sqrSide; j++) {
+                        if(ratio.toDouble() > used.inverseSub(1).toDouble()) {
+                            Fraction n1 = used.inverseSub(1).mul(matrix[i][(int) current]);
+                            Fraction n2 = used.add(ratio).sub(1).mul(matrix[i][(int) (current + 1)]);
+                            value = n1.add(n2);
+                            current += 1;
+                            used = used.add(ratio).sub(1);
+                        }
+
+                        else {
+                            value = ratio.mul(matrix[i][(int) current]);
+                            used = used.add(ratio);
+                        }
+
+                        // TODO: Check if we want matrices of integers or doubles!!!
+                        tmpMatrix[(int) (i + linesPad)][j] = (int) value.toDouble();
+                    }
                 }
             }
+        }
+
+        else {
+            if(noPadding) {
+                for(int i = 0; i < nLines; i++)
+                    for(int j = 0; j < nCols; j++)
+                        tmpMatrix[i][(int) (j + colsPad)] = matrix[i][j];
+            }
+
+            else {
+                Fraction ratio = new Fraction(nLines, sqrSide);
+
+                for(int j = 0; j < nCols; j++) {
+                    long current = 0;
+                    Fraction used = new Fraction(0,1);
+                    Fraction value;
+
+                    for(int i = 0; i < nLines; i++) {
+                        if(ratio.toDouble() > used.inverseSub(1).toDouble()) {
+                            Fraction n1 = used.inverseSub(1).mul(matrix[(int) current][j]);
+                            Fraction n2 = used.add(ratio).sub(1).mul(matrix[(int) (current + 1)][j]);
+                            value = n1.add(n2);
+                            current += 1;
+                            used = used.add(ratio).sub(1);
+                        }
+
+                        else {
+                            value = ratio.mul(matrix[(int) current][j]);
+                            used = used.add(ratio);
+                        }
+
+                        // TODO: Check if we want matrices of integers or doubles!!!
+                        tmpMatrix[i][(int) (j + colsPad)] = (int) value.toDouble();
+                    }
+                }
+            }
+        }
+
+        matrix = tmpMatrix;
+    }
+
+    public void revertTranslation(long sl, long sc, long sloff, long scoff) {
+        long nLines = matrix.length;
+        long nCols = matrix[0].length;
+        long maxLineIndex = sl - 1;
+        long maxLineIndexFirst = nLines - 1;
+
+        int[][] tmpMatrix = new int[(int) sl][(int) sc];
+
+        for(int i = 0; i < nLines; i++)
+            for(int j = 0; j < nCols; j++)
+                tmpMatrix[(int) (maxLineIndex - i - sloff)][(int) (j + scoff)] = matrix[(int) (maxLineIndexFirst - i)][j];
+
+        matrix = tmpMatrix;
+    }
+
+    // TODO: Check if this can be done in the nextPixel!!!
+    public int[][] scaleToStore() {
+        int[][] res = new int[SIDE][SIDE];
+
+        for(int i = 0; i < SIDE; i++)
+            for(int j = 0; j < SIDE; j++)
+                // TODO: Check if we want matrices of integers or doubles!!!
+                res[i][j] = (int) nextPixel();
+
+        return res;
+    }
+
+    // FIXME: Just for testing purposes!!!
+    public void printMatrix() {
+        long nLines = matrix.length;
+        long nCols = matrix[0].length;
+
+        for(int i = 0; i < nLines; i++) {
+            StringBuilder line = new StringBuilder("|");
+            for(int j = 0; j < nCols; j++)
+                line.append(String.valueOf(matrix[i][j]) + "|");
+            System.out.println(line);
         }
     }
 
@@ -168,6 +265,8 @@ public class MatrixEstimator {
     public static void main(String[] args) {
         int[][] matrix = new int[80][80];
         MatrixEstimator me = new MatrixEstimator(matrix);
+
+        me.printMatrix();
         me.nextPixel();
     }
 }
