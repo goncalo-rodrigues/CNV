@@ -19,16 +19,29 @@ public class MatrixEstimator {
     private int[][] matrix;
     private long[] pixel;
     private long sideCounter;
+    private int sl;
+    private int sc;
+    private int wl;
+    private int wc;
+    private int wloff;
+    private int wcoff;
 
     private Fraction[] used;
     private Fraction prop;
 
-    public MatrixEstimator(int[][] matrix) {
+    // TODO: Check if it should get an estimation and not a matrix
+    public MatrixEstimator(int[][] matrix, int sl, int sc, int wl, int wc, int wloff, int wcoff) {
         this.matrix = matrix;
         pixel = new long[] {0, 0};
         sideCounter = 1;
         used = new Fraction[] {new Fraction(0, 1), new Fraction(0, 1)};
         prop = new Fraction(matrix[0].length, SIDE);
+        this.sl = sl;
+        this.sc = sc;
+        this.wl = wl;
+        this.wc = wc;
+        this.wloff = wloff;
+        this.wcoff = wcoff;
     }
 
     public double nextPixel() {
@@ -126,114 +139,123 @@ public class MatrixEstimator {
     }
 
     public void convertToSquare() {
-        long nLines = matrix.length;
-        long nCols = matrix[0].length;
+        int nLines = matrix.length;
+        int nCols = matrix[0].length;
+        boolean rotated = false;
         boolean noPadding = (nLines + nCols) % 2 == 0;
 
         // Non-initialized vars
-        double linesPad = -1;
-        double colsPad = -1;
-        long sqrSide = -1;
+        double linesPad;
+        int sqrSide;
 
-        if(nCols > nLines) {
-            sqrSide = noPadding ? nCols : (nCols + 1);
-            linesPad = (double) sqrSide/2 - (double) nLines/2;
+        if(nCols == nLines)
+            return;
+
+        if(nLines > nCols) {
+            matrix = rotate(matrix);
+            rotated = true;
+            int n = nLines;
+            nLines = nCols;
+            nCols = n;
+        }
+
+        sqrSide = noPadding ? nCols : (nCols + 1);
+        linesPad = (double) sqrSide/2 - (double) nLines/2;
+
+        int[][] tmpMatrix = new int[sqrSide][sqrSide];
+
+        if(noPadding) {
+            for(int i = 0; i < nLines; i++)
+                for(int j = 0; j < nCols; j++)
+                    tmpMatrix[(int) (i + linesPad)][j] = matrix[i][j];
         }
 
         else {
-            sqrSide = noPadding ? nLines : (nLines + 1);
-            colsPad = (double) sqrSide/2 - (double) nCols/2;
-        }
+            Fraction ratio = new Fraction(nCols, sqrSide);
+            for(int i = 0; i < nLines; i++) {
+                int current = 0;
+                Fraction used = new Fraction(0,1);
+                Fraction value;
 
-        int[][] tmpMatrix = new int[(int) sqrSide][(int) sqrSide];
-
-        if(linesPad > -1) {
-            if(noPadding) {
-                for(int i = 0; i < nLines; i++)
-                    for(int j = 0; j < nCols; j++)
-                        tmpMatrix[(int) (i + linesPad)][j] = matrix[i][j];
-            }
-
-            else {
-                Fraction ratio = new Fraction(nCols, sqrSide);
-                for(int i = 0; i < nLines; i++) {
-                    long current = 0;
-                    Fraction used = new Fraction(0,1);
-                    Fraction value;
-
-                    for(int j = 0; j < sqrSide; j++) {
-                        if(ratio.toDouble() > used.inverseSub(1).toDouble()) {
-                            Fraction n1 = used.inverseSub(1).mul(matrix[i][(int) current]);
-                            Fraction n2 = used.add(ratio).sub(1).mul(matrix[i][(int) (current + 1)]);
-                            value = n1.add(n2);
-                            current += 1;
-                            used = used.add(ratio).sub(1);
-                        }
-
-                        else {
-                            value = ratio.mul(matrix[i][(int) current]);
-                            used = used.add(ratio);
-                        }
-
-                        // TODO: Check if we want matrices of integers or doubles!!!
-                        tmpMatrix[(int) (i + linesPad)][j] = (int) value.toDouble();
+                for(int j = 0; j < sqrSide; j++) {
+                    if(ratio.toDouble() > used.inverseSub(1).toDouble()) {
+                        Fraction n1 = used.inverseSub(1).mul(matrix[i][current]);
+                        Fraction n2 = used.add(ratio).sub(1).mul(matrix[i][current + 1]);
+                        value = n1.add(n2);
+                        current += 1;
+                        used = used.add(ratio).sub(1);
                     }
+
+                    else {
+                        value = ratio.mul(matrix[i][current]);
+                        used = used.add(ratio);
+                    }
+
+                    // TODO: Check if we want matrices of integers or doubles!!!
+                    tmpMatrix[(int) (i + linesPad)][j] = (int) value.toDouble();
                 }
             }
         }
 
-        else {
-            if(noPadding) {
-                for(int i = 0; i < nLines; i++)
-                    for(int j = 0; j < nCols; j++)
-                        tmpMatrix[i][(int) (j + colsPad)] = matrix[i][j];
-            }
+        if(rotated)
+            tmpMatrix = revertRotation(tmpMatrix);
 
-            else {
-                Fraction ratio = new Fraction(nLines, sqrSide);
+        matrix = tmpMatrix;
+    }
 
-                for(int j = 0; j < nCols; j++) {
-                    long current = 0;
-                    Fraction used = new Fraction(0,1);
-                    Fraction value;
+    public void revertTranslation() {
+        if(sc == wc && sl == wl)
+            return;
 
-                    for(int i = 0; i < nLines; i++) {
-                        if(ratio.toDouble() > used.inverseSub(1).toDouble()) {
-                            Fraction n1 = used.inverseSub(1).mul(matrix[(int) current][j]);
-                            Fraction n2 = used.add(ratio).sub(1).mul(matrix[(int) (current + 1)][j]);
-                            value = n1.add(n2);
-                            current += 1;
-                            used = used.add(ratio).sub(1);
-                        }
+        int maxLineIndex = sl - 1;
+        int maxLineIndexFirst = wl - 1;
 
-                        else {
-                            value = ratio.mul(matrix[(int) current][j]);
-                            used = used.add(ratio);
-                        }
+        // Creates a new matrix to store the conversion result
+        int[][] tmpMatrix = new int[sl][sc];
 
-                        // TODO: Check if we want matrices of integers or doubles!!!
-                        tmpMatrix[i][(int) (j + colsPad)] = (int) value.toDouble();
-                    }
-                }
-            }
+        for(int i = 0; i < wl; i++) {
+            // To reduce the number of math operations with the same result
+            int fromCol = maxLineIndexFirst - i;
+            int toCol = maxLineIndex - i - wloff;
+            for (int j = 0; j < wc; j++)
+                tmpMatrix[toCol][j + wcoff] = matrix[fromCol][j];
         }
 
         matrix = tmpMatrix;
     }
 
-    public void revertTranslation(long sl, long sc, long sloff, long scoff) {
-        long nLines = matrix.length;
-        long nCols = matrix[0].length;
-        long maxLineIndex = sl - 1;
-        long maxLineIndexFirst = nLines - 1;
+    /*
+     * Aux functions
+     */
 
-        int[][] tmpMatrix = new int[(int) sl][(int) sc];
+    // Makes a rotation
+    private static int[][] rotate(int[][] matrix) {
+        int[][] tmpMatrix;
+        int nLines = matrix.length;
+        int nCols = matrix[0].length;
 
-        for(int i = 0; i < nLines; i++)
-            for(int j = 0; j < nCols; j++)
-                tmpMatrix[(int) (maxLineIndex - i - sloff)][(int) (j + scoff)] = matrix[(int) (maxLineIndexFirst - i)][j];
+        tmpMatrix = new int[nCols][nLines];
 
-        matrix = tmpMatrix;
+        // Does the rotation
+        for(int i = 0; i < nCols; i++)
+            for(int j = 0; j < nLines; j++)
+                tmpMatrix[i][j] = matrix[j][i];
+
+        return tmpMatrix;
+    }
+
+    // Reverts the rotation (but now it is a square)
+    private static int[][] revertRotation(int[][] matrix) {
+        int side = matrix.length;
+        for(int i = 0; i < side; i++) {
+            for(int j = i; j < side; j++) {
+                int n = matrix[i][j];
+                matrix[i][j] = matrix[j][i];
+                matrix[j][i] = n;
+            }
+        }
+
+        return matrix;
     }
 
     // TODO: Check if this can be done in the nextPixel!!!
@@ -263,10 +285,26 @@ public class MatrixEstimator {
 
     // FIXME: Just for testing purposes!!!
     public static void main(String[] args) {
-        int[][] matrix = new int[80][80];
-        MatrixEstimator me = new MatrixEstimator(matrix);
+        int LINES = 31;
+        int COLS = 40;
 
+        int[][] matrix = new int[LINES][COLS];
+
+        // Changes the matrix
+        for(int i = 0; i < LINES; i++)
+            for(int j = 0; j < COLS; j++)
+                matrix[i][j] = 2;
+
+        MatrixEstimator me = new MatrixEstimator(matrix, LINES, COLS, LINES - 1, COLS - 1, 1, 1);
+//        me.printMatrix();
+        me.revertTranslation();
         me.printMatrix();
+
+        System.out.println("\n==================================================================================\n");
+
+        me.convertToSquare();
+        me.printMatrix();
+
         me.nextPixel();
     }
 }
