@@ -44,21 +44,10 @@ public class MatrixEstimator {
         this.wcoff = wcoff;
     }
 
-    public double nextPixel() {
+    private double nextPixel() {
         long nextCol = (long) floor(prop.add(pixel[COLUMN]).add(used[COLUMN]).toDouble());
-        List<List<long[]>> neededPixels = new ArrayList<>();
         long neededLine = (long) ceil(prop.add(used[LINE]).toDouble());
         long neededCol = (long) ceil(prop.add(used[COLUMN]).toDouble());
-
-        // Gets the needed pixels for the calculation
-        for(long i = 0; i < neededLine; i++) {
-            List<long[]> tmpList = new ArrayList<>();
-            neededPixels.add(tmpList);
-
-            long l = pixel[LINE] + i;
-            for(long j = 0; j < neededCol; j++)
-                tmpList.add(new long[] {l, pixel[LINE] + j});
-        }
 
         // Calculates the value for the load balancer table
         double res = 0;
@@ -86,6 +75,7 @@ public class MatrixEstimator {
             else
                 useLine = new Fraction(1,1);
 
+            long l = pixel[LINE] + i;
             for(long j = 0; j < neededCol; j++) {
                 Fraction useCol;
                 if(j == neededCol - 1) {
@@ -109,10 +99,7 @@ public class MatrixEstimator {
                 else
                     useCol = new Fraction(1, 1);
 
-                long lineM = neededPixels.get((int) i).get((int) j)[LINE];
-                long colM = neededPixels.get((int) i).get((int) j)[COLUMN];
-
-                res += useLine.mul(useCol).mul(matrix[ (int) lineM][(int) colM]).toDouble();
+                res += useLine.mul(useCol).mul(matrix[(int) l][(int) (pixel[COLUMN] + j)]).toDouble();
             }
         }
 
@@ -138,7 +125,7 @@ public class MatrixEstimator {
         return res;
     }
 
-    public void convertToSquare() {
+    private void convertToSquare() {
         int nLines = matrix.length;
         int nCols = matrix[0].length;
         boolean rotated = false;
@@ -203,7 +190,7 @@ public class MatrixEstimator {
         matrix = tmpMatrix;
     }
 
-    public void revertTranslation() {
+    private void revertTranslation() {
         if(sc == wc && sl == wl)
             return;
 
@@ -259,7 +246,11 @@ public class MatrixEstimator {
     }
 
     // TODO: Check if this can be done in the nextPixel!!!
-    public int[][] scaleToStore() {
+    // TODO: Add the methods from the main, making all the necessary transformations!!!
+    public void scaleToStore() {
+        if(matrix.length == SIDE)
+            return;
+
         int[][] res = new int[SIDE][SIDE];
 
         for(int i = 0; i < SIDE; i++)
@@ -267,7 +258,7 @@ public class MatrixEstimator {
                 // TODO: Check if we want matrices of integers or doubles!!!
                 res[i][j] = (int) nextPixel();
 
-        return res;
+        matrix = res;
     }
 
     // FIXME: Just for testing purposes!!!
@@ -285,26 +276,29 @@ public class MatrixEstimator {
 
     // FIXME: Just for testing purposes!!!
     public static void main(String[] args) {
-        int LINES = 31;
-        int COLS = 40;
+        int LINES = 500;
+        int COLS = 1000;
 
         int[][] matrix = new int[LINES][COLS];
 
         // Changes the matrix
         for(int i = 0; i < LINES; i++)
             for(int j = 0; j < COLS; j++)
-                matrix[i][j] = 2;
+                matrix[i][j] = i + j;
 
         MatrixEstimator me = new MatrixEstimator(matrix, LINES, COLS, LINES - 1, COLS - 1, 1, 1);
-//        me.printMatrix();
-        me.revertTranslation();
-        me.printMatrix();
 
-        System.out.println("\n==================================================================================\n");
+        me.revertTranslation();
+//        me.printMatrix();
+//
+//        System.out.println("\n==================================================================================\n");
 
         me.convertToSquare();
-        me.printMatrix();
+//        me.printMatrix();
+//
+//        System.out.println("\n==================================================================================\n");
 
-        me.nextPixel();
+        me.scaleToStore();
+        me.printMatrix();
     }
 }
