@@ -1,10 +1,5 @@
 package ist.cnv;
 
-import com.amazonaws.services.dynamodbv2.xspec.L;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import static java.lang.Math.*;
 
 /**
@@ -29,19 +24,23 @@ public class MatrixEstimator {
     private double[] used;
     private double prop;
 
-    // TODO: Check if it should get an estimation and not a matrix
-    public MatrixEstimator(int[][] matrix, int sl, int sc, int wl, int wc, int wloff, int wcoff) {
-        this.matrix = matrix;
+    public MatrixEstimator(long metric, int sl, int sc, int wl, int wc, int wloff, int wcoff) {
         pixel = new int[] {0, 0};
         sideCounter = 1;
         used = new double[] {0, 0};
-        prop = (double) matrix[0].length / (double) SIDE;
         this.sl = sl;
         this.sc = sc;
         this.wl = wl;
         this.wc = wc;
         this.wloff = wloff;
         this.wcoff = wcoff;
+
+        // Converts the metric to a matrix
+        matrix = new int[wl][wc];
+        double ratio = (double) metric / (double) (wl * wc);
+        for(int i = 0; i < wl; i++)
+            for(int j = 0; j < wc; j++)
+                matrix[i][j] = (int) ratio;
     }
 
     private double nextPixel() {
@@ -230,14 +229,15 @@ public class MatrixEstimator {
         return matrix;
     }
 
-    // TODO: Check if this can be done in the nextPixel!!!
-    // TODO: Add the methods from the main, making all the necessary transformations!!!
     public void scaleToStore() {
         if(matrix.length == SIDE)
             return;
 
-        int[][] res = new int[SIDE][SIDE];
+        revertTranslation();
+        convertToSquare();
 
+        int[][] res = new int[SIDE][SIDE];
+        prop = (double) matrix[0].length / (double) SIDE;
         for(int i = 0; i < SIDE; i++)
             for(int j = 0; j < SIDE; j++)
                 // TODO: Check if we want matrices of integers or doubles!!!
@@ -264,25 +264,8 @@ public class MatrixEstimator {
         int LINES = 10000;
         int COLS = 10000;
 
-        int[][] matrix = new int[LINES][COLS];
-
-        // Changes the matrix
-        for(int i = 0; i < LINES; i++)
-            for(int j = 0; j < COLS; j++)
-                matrix[i][j] = i + j;
-
-        MatrixEstimator me = new MatrixEstimator(matrix, LINES, COLS, LINES - 1, COLS - 1, 1, 1);
-
-        me.revertTranslation();
-//        me.printMatrix();
-//
-//        System.out.println("\n==================================================================================\n");
-
-        me.convertToSquare();
-//        me.printMatrix();
-//
-//        System.out.println("\n==================================================================================\n");
-
+        MatrixEstimator me = new MatrixEstimator(10000 * 10000, LINES, COLS, LINES - 1, COLS - 1, 1, 1);
+        
         me.scaleToStore();
         me.printMatrix();
     }
