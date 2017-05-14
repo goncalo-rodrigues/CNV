@@ -79,8 +79,9 @@ public class Fraction {
     }
 
     // It will only remain the decimal part
-    public void removeInteger() {
+    public Fraction removeInteger() {
         num = num % den;
+        return this;
     }
 
     public double toDouble() {
