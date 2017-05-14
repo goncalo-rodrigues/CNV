@@ -10,6 +10,8 @@ public class MatrixEstimator {
     private static final int SIDE = 40;
     private static final int LINE = 0;
     private static final int COLUMN = 1;
+    private static final String ANSI_RESET = "\u001B[0m";
+    private static final String ANSI_RED = "\u001B[31m";
 
     private int[][] matrix;
     private int[] pixel;
@@ -256,8 +258,13 @@ public class MatrixEstimator {
 
         for(int i = 0; i < nLines; i++) {
             StringBuilder line = new StringBuilder("|");
-            for(int j = 0; j < nCols; j++)
-                line.append(String.valueOf(matrix[i][j]) + "|");
+            for(int j = 0; j < nCols; j++) {
+                String val = String.valueOf(matrix[i][j]);
+                if(matrix[i][j] > 0)
+                    val = ANSI_RED + val + ANSI_RESET;
+
+                line.append(val + "|");
+            }
             System.out.println(line);
         }
     }
