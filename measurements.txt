@@ -1,5 +1,5 @@
 All images:
-Instructions = 13.66078925 * dot_calls + 400 * num_pixeis
+Instructions = 86.4387540911 * dot_calls + 2751 * num_pixeis
 
 Test01:
 Time (s) = 0.258352205856 * dot_calls / 1e6 + 0.10458087559
