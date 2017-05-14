@@ -1,11 +1,11 @@
+package ist.cnv.loadBalancer;
+
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-
 import java.util.ArrayList;
 import java.util.List;
 
-// TODO: Try to create a connection between the requested file and the possible corresponding load
-public class RedirectRequest implements HttpHandler {
+public class RedirectRequest implements HttpHandler{
     private List<AvailableWebServer> ws = new ArrayList<AvailableWebServer>();
 
     @Override
