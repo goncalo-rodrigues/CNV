@@ -10,12 +10,16 @@ import static java.lang.Math.abs;
  */
 public class PrevisionAlgorithm {
     ArrayList<File> files = new ArrayList<>();
+    ArrayList<String> fileNames = new ArrayList<>();
     DynamoDBConnection dynamo;
+
 
     public PrevisionAlgorithm(ArrayList<String> filesNames){
         dynamo = new DynamoDBConnection();
+        this.fileNames = filesNames;
         for(String fileName: filesNames)
             files.add(new File(fileName,dynamo));
+
 
     }
 
@@ -30,7 +34,10 @@ public class PrevisionAlgorithm {
                             int wc, int wr, int coof,int roof){
         int requestPixels = wr*wc;
         float propotion = requestPixels / 10000;
-
+        if(!fileNames.contains(fileName)) {
+            files.add(new File(fileName, dynamo));
+            fileNames.add(fileName);
+        }
         //TODO @Nuno the conversion is here
         for(File file:files)
             if(file.name.equals(fileName))
@@ -56,12 +63,18 @@ public class PrevisionAlgorithm {
         float propotion = requestPixels / 10000;
         boolean changed;
 
+        if(!fileNames.contains(fileName)){
+            files.add(new File(fileName,dynamo));
+            fileNames.add(fileName);
+        }
+
         //TODO @Nuno the conversion is here
         for(File file : files)
             if(file.name.equals(fileName)) {
                 changed = insertData(0, 0, 20, 20, (int) (cost / propotion), file);//TODO fix
                 if(changed)
                     file.save();
+
             }
     }
 

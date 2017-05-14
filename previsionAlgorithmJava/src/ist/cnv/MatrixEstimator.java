@@ -43,10 +43,16 @@ public class MatrixEstimator {
                 matrix[i][j] = (int) ratio;
     }
 
-    private double nextPixel() {
+    private int nextPixel() {
         int nextCol = (int) floor(prop + pixel[COLUMN] + used[COLUMN]);
         int neededLine = (int) ceil(prop + used[LINE]);
         int neededCol = (int) ceil(prop + used[COLUMN]);
+
+        // Prevents index out of bounds
+        while(pixel[LINE] + neededLine > matrix.length)
+            neededLine --;
+        while(pixel[COLUMN] + neededCol > matrix.length)
+            neededCol --;
 
         // Calculates the value for the load balancer table
         double res = 0;
@@ -108,7 +114,7 @@ public class MatrixEstimator {
             sideCounter = 1;
         }
 
-        return res;
+        return (int) ceil(res / (neededLine * neededCol));
     }
 
     private void convertToSquare() {
@@ -162,8 +168,7 @@ public class MatrixEstimator {
                         used = used + ratio;
                     }
 
-                    // TODO: Check if we want matrices of integers or doubles!!!
-                    tmpMatrix[(int) (i + linesPad)][j] = (int) value;
+                    tmpMatrix[(int) (i + linesPad)][j] = (int) round(value);
                 }
             }
         }
@@ -240,13 +245,11 @@ public class MatrixEstimator {
         prop = (double) matrix[0].length / (double) SIDE;
         for(int i = 0; i < SIDE; i++)
             for(int j = 0; j < SIDE; j++)
-                // TODO: Check if we want matrices of integers or doubles!!!
-                res[i][j] = (int) nextPixel();
+                res[i][j] = nextPixel();
 
         matrix = res;
     }
 
-    // FIXME: Just for testing purposes!!!
     public void printMatrix() {
         long nLines = matrix.length;
         long nCols = matrix[0].length;
@@ -261,10 +264,10 @@ public class MatrixEstimator {
 
     // FIXME: Just for testing purposes!!!
     public static void main(String[] args) {
-        int LINES = 10000;
-        int COLS = 10000;
+        int LINES = 15000;
+        int COLS = LINES;
 
-        MatrixEstimator me = new MatrixEstimator(10000 * 10000, LINES, COLS, LINES - 1, COLS - 1, 1, 1);
+        MatrixEstimator me = new MatrixEstimator(LINES * COLS, LINES, COLS, LINES, COLS, 0, 0);
         
         me.scaleToStore();
         me.printMatrix();
