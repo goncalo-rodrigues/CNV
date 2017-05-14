@@ -26,16 +26,16 @@ public class MatrixEstimator {
     private int wloff;
     private int wcoff;
 
-    private Fraction[] used;
-    private Fraction prop;
+    private double[] used;
+    private double prop;
 
     // TODO: Check if it should get an estimation and not a matrix
     public MatrixEstimator(int[][] matrix, int sl, int sc, int wl, int wc, int wloff, int wcoff) {
         this.matrix = matrix;
         pixel = new int[] {0, 0};
         sideCounter = 1;
-        used = new Fraction[] {new Fraction(0, 1), new Fraction(0, 1)};
-        prop = new Fraction(matrix[0].length, SIDE);
+        used = new double[] {0, 0};
+        prop = (double) matrix[0].length / (double) SIDE;
         this.sl = sl;
         this.sc = sc;
         this.wl = wl;
@@ -45,68 +45,67 @@ public class MatrixEstimator {
     }
 
     private double nextPixel() {
-        int nextCol = (int) floor(prop.add(pixel[COLUMN]).add(used[COLUMN]).toDouble());
-        int neededLine = (int) ceil(prop.add(used[LINE]).toDouble());
-        int neededCol = (int) ceil(prop.add(used[COLUMN]).toDouble());
+        int nextCol = (int) floor(prop + pixel[COLUMN] + used[COLUMN]);
+        int neededLine = (int) ceil(prop + used[LINE]);
+        int neededCol = (int) ceil(prop + used[COLUMN]);
 
         // Calculates the value for the load balancer table
         double res = 0;
         for(int i = 0; i < neededLine; i++) {
-            Fraction useLine = new Fraction(1,1);
+            double useLine = 1;
 
             if(i == neededLine - 1) {
-                Fraction tmpLine = used[LINE].add(prop);
+                double tmpLine = used[LINE] + prop;
 
-                if(tmpLine.toDouble() < 1 || (tmpLine.removeInteger().toDouble() == 0 && SIDE >= matrix[0].length))
+                if(tmpLine < 1 || ( (tmpLine -= (long) tmpLine) == 0 && SIDE >= matrix[0].length))
                     useLine = prop;
 
-                else if(tmpLine.toDouble() != 0)
+                else if(tmpLine != 0)
                     useLine = tmpLine;
             }
 
             // When it needs more than one pixel
             else if(i == 0)
-                useLine = used[LINE].inverseSub(1);
+                useLine = 1 - used[LINE];
 
             int l = pixel[LINE] + i;
             for(int j = 0; j < neededCol; j++) {
-                Fraction useCol = new Fraction(1,1);
+                double useCol = 1;
 
                 if(j == neededCol - 1) {
-                    Fraction tmpCol = used[COLUMN].add(prop);
+                    double tmpCol = used[COLUMN] + prop;
 
-                    if(tmpCol.toDouble() < 1 || (tmpCol.removeInteger().toDouble() == 0 && SIDE >= matrix[0].length))
+                    if(tmpCol < 1 || ( (tmpCol -= (long) tmpCol) == 0 && SIDE >= matrix[0].length))
                         useCol = prop;
 
-                    else if(tmpCol.toDouble() != 0)
+                    else if(tmpCol != 0)
                         useCol = tmpCol;
                 }
 
                 // When it needs more than one pixel
                 else if(j == 0)
-                    useCol = used[COLUMN].inverseSub(1);
+                    useCol = 1 - used[COLUMN];
 
-                res += useLine.mul(useCol).mul(matrix[l][pixel[COLUMN] + j]).toDouble();
+                res += useLine * useCol * matrix[l][pixel[COLUMN] + j];
             }
         }
 
         // Updates the next pixel to be calculated
-        //if(nextCol < matrix[0].length && sideCounter < SIDE) {
         if(sideCounter < SIDE) {
             pixel[COLUMN] = nextCol;
-            used[COLUMN] = used[COLUMN].add(pixel[COLUMN]).add(prop);
-            used[COLUMN].removeInteger();
+            used[COLUMN] = used[COLUMN] + pixel[COLUMN] + prop;
+            used[COLUMN] -= (long) used[COLUMN];
             sideCounter++;
         }
 
         else {
-            int nextLine = (int) floor(used[LINE].add(pixel[LINE]).add(prop).toDouble());
+            int nextLine = (int) floor(used[LINE] + pixel[LINE] + prop);
             pixel = new int[] {nextLine, 0};
 
-            used[LINE] = used[LINE].add(pixel[LINE]).add(prop);
-            used[LINE].removeInteger();
+            used[LINE] = used[LINE] + pixel[LINE]  + prop;
+            used[LINE] -= (long) used[LINE];
 
-            used[COLUMN] = new Fraction(0,1);
+            used[COLUMN] = 0;
             sideCounter = 1;
         }
 
@@ -146,28 +145,26 @@ public class MatrixEstimator {
         }
 
         else {
-            Fraction ratio = new Fraction(nCols, sqrSide);
+            double ratio = (double) nCols / (double) sqrSide;
             for(int i = 0; i < nLines; i++) {
                 int current = 0;
-                Fraction used = new Fraction(0,1);
-                Fraction value;
+                double used = 0;
+                double value;
 
                 for(int j = 0; j < sqrSide; j++) {
-                    if(ratio.toDouble() > used.inverseSub(1).toDouble()) {
-                        Fraction n1 = used.inverseSub(1).mul(matrix[i][current]);
-                        Fraction n2 = used.add(ratio).sub(1).mul(matrix[i][current + 1]);
-                        value = n1.add(n2);
+                    if(ratio > 1 - used) {
+                        value = (1 - used) * matrix[i][current] + (used + ratio - 1) * matrix[i][current + 1];
                         current += 1;
-                        used = used.add(ratio).sub(1);
+                        used = used + ratio - 1;
                     }
 
                     else {
-                        value = ratio.mul(matrix[i][current]);
-                        used = used.add(ratio);
+                        value = ratio * matrix[i][current];
+                        used = used + ratio;
                     }
 
                     // TODO: Check if we want matrices of integers or doubles!!!
-                    tmpMatrix[(int) (i + linesPad)][j] = (int) value.toDouble();
+                    tmpMatrix[(int) (i + linesPad)][j] = (int) value;
                 }
             }
         }
@@ -264,8 +261,8 @@ public class MatrixEstimator {
 
     // FIXME: Just for testing purposes!!!
     public static void main(String[] args) {
-        int LINES = 31;
-        int COLS = 32;
+        int LINES = 10000;
+        int COLS = 10000;
 
         int[][] matrix = new int[LINES][COLS];
 
