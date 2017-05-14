@@ -14,19 +14,19 @@ Time (s) = 0.0736618176223 * dot_calls / 1e6 + 0.0405712279899
 
 Or, with no biases:
 Test01:
-Time (s) = 0.39653493 * dot_calls / 1e6
+Time (s) = 0.40705213 * dot_calls / 1e6
 Test02:
-Time (s) = 0.24786891 * dot_calls / 1e6
+Time (s) = 0.23178467 * dot_calls / 1e6
 Test03:
-Time (s) = 0.30032557 * dot_calls / 1e6
+Time (s) = 0.30268014 * dot_calls / 1e6
 Test04:
-Time (s) = 0.05083112 * dot_calls / 1e6
+Time (s) = 0.04596641 * dot_calls / 1e6
 Test05:
-Time (s) =  0.08737964 * dot_calls / 1e6
+Time (s) =  0.08598921 * dot_calls / 1e6
 
 Relative to test01:
 Test01: 1
-Test02: 0,625087202
-Test03: 0,757374817
-Test04: 0,128188253
-Test05: 0,22035799
+Test02: 0.56942257
+Test03: 0.74359062
+Test04: 0.11292513
+Test05: 0.21124866
