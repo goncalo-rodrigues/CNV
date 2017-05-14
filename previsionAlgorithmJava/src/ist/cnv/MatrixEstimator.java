@@ -64,7 +64,7 @@ public class MatrixEstimator {
                     useLine = tmpLine;
             }
 
-            // FIXME: Is this right?
+            // When it needs more than one pixel
             else if(i == 0)
                 useLine = used[LINE].inverseSub(1);
 
@@ -82,7 +82,7 @@ public class MatrixEstimator {
                         useCol = tmpCol;
                 }
 
-                // FIXME: Is this right?
+                // When it needs more than one pixel
                 else if(j == 0)
                     useCol = used[COLUMN].inverseSub(1);
 
@@ -91,7 +91,8 @@ public class MatrixEstimator {
         }
 
         // Updates the next pixel to be calculated
-        if(nextCol < matrix[0].length && sideCounter < SIDE) {
+        //if(nextCol < matrix[0].length && sideCounter < SIDE) {
+        if(sideCounter < SIDE) {
             pixel[COLUMN] = nextCol;
             used[COLUMN] = used[COLUMN].add(pixel[COLUMN]).add(prop);
             used[COLUMN].removeInteger();
