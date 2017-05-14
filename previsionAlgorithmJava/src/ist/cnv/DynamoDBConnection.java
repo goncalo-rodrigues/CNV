@@ -69,12 +69,14 @@ public class DynamoDBConnection {
         }
     }
 
-    public void saveImageData(String name, String cost, String area){
+    public void saveImageData(String name, String cost, String area,double normalizingConstant){
         Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
 
         item.put(TABLE_KEY_NAME, new AttributeValue(name));
         item.put("cost",new AttributeValue(cost));
         item.put("area",new AttributeValue(area));
+
+        item.put("normalizingConstant", new AttributeValue(new String(String.valueOf(normalizingConstant))));
         System.out.println(item);
         System.out.println(item.keySet());
 
@@ -97,7 +99,7 @@ public class DynamoDBConnection {
         Item item = outcome.getItem();
         if(item == null)
             return null;
-        String output[]= {item.getString("cost"),item.getString("area")};
+        String output[]= {item.getString("cost"),item.getString("area"),item.getString("normalizingConstant")};
         return output;
     }
 
