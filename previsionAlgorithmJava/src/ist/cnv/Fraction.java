@@ -1,5 +1,6 @@
 package ist.cnv;
 
+// TODO: Check if this is needed in the future!!!
 public class Fraction {
     private long num;
     private long den;
@@ -79,8 +80,9 @@ public class Fraction {
     }
 
     // It will only remain the decimal part
-    public void removeInteger() {
+    public Fraction removeInteger() {
         num = num % den;
+        return this;
     }
 
     public double toDouble() {

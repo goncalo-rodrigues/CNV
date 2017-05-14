@@ -1,3 +1,6 @@
+package ist.cnv.loadBalancer;
+
+
 public class AvailableWebServer {
     private String url = null;
 

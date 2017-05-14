@@ -1,5 +1,6 @@
-import com.sun.net.httpserver.HttpServer;
+package ist.cnv.loadBalancer;
 
+import com.sun.net.httpserver.HttpServer;
 import java.net.InetSocketAddress;
 
 public class LoadBalancer {
