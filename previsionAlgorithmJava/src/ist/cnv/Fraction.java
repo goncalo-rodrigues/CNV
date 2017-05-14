@@ -1,5 +1,6 @@
 package ist.cnv;
 
+// TODO: Check if this is needed in the future!!!
 public class Fraction {
     private long num;
     private long den;
