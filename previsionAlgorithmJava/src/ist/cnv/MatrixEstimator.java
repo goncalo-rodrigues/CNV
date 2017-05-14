@@ -17,8 +17,8 @@ public class MatrixEstimator {
     private static final int COLUMN = 1;
 
     private int[][] matrix;
-    private long[] pixel;
-    private long sideCounter;
+    private int[] pixel;
+    private int sideCounter;
     private int sl;
     private int sc;
     private int wl;
@@ -32,7 +32,7 @@ public class MatrixEstimator {
     // TODO: Check if it should get an estimation and not a matrix
     public MatrixEstimator(int[][] matrix, int sl, int sc, int wl, int wc, int wloff, int wcoff) {
         this.matrix = matrix;
-        pixel = new long[] {0, 0};
+        pixel = new int[] {0, 0};
         sideCounter = 1;
         used = new Fraction[] {new Fraction(0, 1), new Fraction(0, 1)};
         prop = new Fraction(matrix[0].length, SIDE);
@@ -45,61 +45,48 @@ public class MatrixEstimator {
     }
 
     private double nextPixel() {
-        long nextCol = (long) floor(prop.add(pixel[COLUMN]).add(used[COLUMN]).toDouble());
-        long neededLine = (long) ceil(prop.add(used[LINE]).toDouble());
-        long neededCol = (long) ceil(prop.add(used[COLUMN]).toDouble());
+        int nextCol = (int) floor(prop.add(pixel[COLUMN]).add(used[COLUMN]).toDouble());
+        int neededLine = (int) ceil(prop.add(used[LINE]).toDouble());
+        int neededCol = (int) ceil(prop.add(used[COLUMN]).toDouble());
 
         // Calculates the value for the load balancer table
         double res = 0;
-        for(long i = 0; i < neededLine; i++) {
-            Fraction useLine;
+        for(int i = 0; i < neededLine; i++) {
+            Fraction useLine = new Fraction(1,1);
 
             if(i == neededLine - 1) {
-                useLine = used[LINE].add(prop);
+                Fraction tmpLine = used[LINE].add(prop);
 
-                if(useLine.toDouble() < 0)
+                if(tmpLine.toDouble() < 1 || (tmpLine.removeInteger().toDouble() == 0 && SIDE >= matrix[0].length))
                     useLine = prop;
-                else
-                    useLine.removeInteger();
 
-                if(useLine.toDouble() == 0) {
-                    if(SIDE < matrix[0].length)
-                        useLine = new Fraction(1,1);
-                    else
-                        useLine = prop;
-                }
+                else if(tmpLine.toDouble() != 0)
+                    useLine = tmpLine;
             }
 
+            // FIXME: Is this right?
             else if(i == 0)
                 useLine = used[LINE].inverseSub(1);
-            else
-                useLine = new Fraction(1,1);
 
-            long l = pixel[LINE] + i;
-            for(long j = 0; j < neededCol; j++) {
-                Fraction useCol;
+            int l = pixel[LINE] + i;
+            for(int j = 0; j < neededCol; j++) {
+                Fraction useCol = new Fraction(1,1);
+
                 if(j == neededCol - 1) {
-                    useCol = used[COLUMN].add(prop);
+                    Fraction tmpCol = used[COLUMN].add(prop);
 
-                    if(useCol.toDouble() < 0)
+                    if(tmpCol.toDouble() < 1 || (tmpCol.removeInteger().toDouble() == 0 && SIDE >= matrix[0].length))
                         useCol = prop;
-                    else
-                        useCol.removeInteger();
 
-                    if(useCol.toDouble() == 0) {
-                        if(SIDE < matrix[0].length)
-                            useCol = new Fraction(1, 1);
-                        else
-                            useCol = prop;
-                    }
+                    else if(tmpCol.toDouble() != 0)
+                        useCol = tmpCol;
                 }
 
+                // FIXME: Is this right?
                 else if(j == 0)
                     useCol = used[COLUMN].inverseSub(1);
-                else
-                    useCol = new Fraction(1, 1);
 
-                res += useLine.mul(useCol).mul(matrix[(int) l][(int) (pixel[COLUMN] + j)]).toDouble();
+                res += useLine.mul(useCol).mul(matrix[l][pixel[COLUMN] + j]).toDouble();
             }
         }
 
@@ -112,8 +99,8 @@ public class MatrixEstimator {
         }
 
         else {
-            long nextLine = (long) floor(used[LINE].add(pixel[LINE]).add(prop).toDouble());
-            pixel = new long[] {nextLine, 0};
+            int nextLine = (int) floor(used[LINE].add(pixel[LINE]).add(prop).toDouble());
+            pixel = new int[] {nextLine, 0};
 
             used[LINE] = used[LINE].add(pixel[LINE]).add(prop);
             used[LINE].removeInteger();
@@ -276,8 +263,8 @@ public class MatrixEstimator {
 
     // FIXME: Just for testing purposes!!!
     public static void main(String[] args) {
-        int LINES = 500;
-        int COLS = 1000;
+        int LINES = 31;
+        int COLS = 32;
 
         int[][] matrix = new int[LINES][COLS];
 
