@@ -267,7 +267,7 @@ public class MatrixEstimator {
         int LINES = 15000;
         int COLS = LINES;
 
-        MatrixEstimator me = new MatrixEstimator(LINES * COLS, LINES, COLS, LINES, COLS, 0, 0);
+        MatrixEstimator me = new MatrixEstimator(LINES * COLS, LINES, COLS, LINES / 2, COLS / 2, 0, 0);
         
         me.scaleToStore();
         me.printMatrix();
