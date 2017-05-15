@@ -64,7 +64,10 @@ public class AWSWorkerFactory {
         ec2.terminateInstances(terminateRequest);
     }
 
-
+    public boolean isWorkerReady(Worker worker){
+        String instanceID = worker.getId();
+        return true;//FIXME change to server request
+    }
 
     public static void main(String[] args){
         AWSWorkerFactory factory = new AWSWorkerFactory();
