@@ -6,17 +6,19 @@ package ist.cnv;
 public class File {
     private static int TSIZE = 40;
     private static int SAVESUNTILSEND = 5;
-    private static int STARTINGCOST = 100; //TODO refine this number see all the images result and get a good etimation
+    private static int STARTINGCOST = 11; //TODO refine this number see all the images result and get a good etimation
     String name;
     public int[][] cost;
     public int[][] area;
+    public double normalizingConstant;
     DynamoDBConnection dynamoConnection;
 
     private int acumulatedSaves = 0;
 
 
-    public File(String name,DynamoDBConnection dynamoConnection){
+    public File(String name,double normalizingConstant ,DynamoDBConnection dynamoConnection){
         this.name = name;
+        this.normalizingConstant = normalizingConstant;
         this.dynamoConnection = dynamoConnection;
         //TODO check if already exists in DynamoDB
         load();
@@ -27,6 +29,7 @@ public class File {
         if (result != null) {
             cost = stringToIntList(result[0]);
             area = stringToIntList(result[1]);
+            normalizingConstant = Double.parseDouble(result[2]);
         }
         else{
             cost = new int[TSIZE][TSIZE];
@@ -52,7 +55,7 @@ public class File {
     public void forceSave(){
         String costString = intListToString(cost);
         String areaString = intListToString(area);
-        dynamoConnection.saveImageData(name,costString,areaString);
+        dynamoConnection.saveImageData(name,costString,areaString,normalizingConstant);
     }
 
 

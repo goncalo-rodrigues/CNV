@@ -18,24 +18,21 @@ public class PrevisionAlgorithm {
         dynamo = new DynamoDBConnection();
         this.fileNames = filesNames;
         for(String fileName: filesNames)
-            files.add(new File(fileName,dynamo));
-
-
+            files.add(new File(fileName,1,dynamo));
     }
 
-    //http://<load-balancer-DNS-name>/r.html?
-    // f=<model-filename>
-    // &sc=<scene-columns>&sr=<scene-rows>          //number of collumns and rows in table
-    // &wc=<window-columns>&wr=<window-rows>        //resoluçao final
-    // &coff=<column-offset>&roff=<row-offset>      //|_
+    public void addFile(String fileName, double normalizingConstant){
+        files.add(new File(fileName,normalizingConstant, dynamo));
+        fileNames.add(fileName);
+    }
 
 
     public int estimateCost(String fileName, int sc, int sr,
                             int wc, int wr, int coof,int roof){
-        int requestPixels = wr*wc;
-        float propotion = requestPixels / 10000;
+        int requestPixels = sr*sc;
+        float propotion = requestPixels / 1600;
         if(!fileNames.contains(fileName)) {
-            files.add(new File(fileName, dynamo));
+            files.add(new File(fileName,1, dynamo));
             fileNames.add(fileName);
         }
         //TODO @Nuno the conversion is here
@@ -59,12 +56,12 @@ public class PrevisionAlgorithm {
 
     public void insertData(String fileName, int sc, int sr,
                             int wc, int wr, int coof,int roof,int cost){
-        int requestPixels = wr*wc;
-        float propotion = requestPixels / 10000;
+        int requestPixels = sr*sc;
+        float propotion = requestPixels / 1600;
         boolean changed;
 
         if(!fileNames.contains(fileName)){
-            files.add(new File(fileName,dynamo));
+            files.add(new File(fileName,1,dynamo));
             fileNames.add(fileName);
         }
 
@@ -85,6 +82,7 @@ public class PrevisionAlgorithm {
 
 
     private boolean insertData(int x1,int y1, int x2, int y2, int requestCost,File file){
+        requestCost =(int)( (float)requestCost * file.normalizingConstant );
         int totalArea = (abs(x1-x2))*(abs(y1-y2));
         int knownCost = 0;
         int nElemetsToChange = 0;
@@ -115,7 +113,7 @@ public class PrevisionAlgorithm {
             }
         }
         System.out.println("totalArea:"+totalArea+"\nnElemetsToChange:"+nElemetsToChange+"\ncostToSplit: "+costToSplit+
-                "\neachCost:"+eachCost);
+                "\neachCost:"+eachCost+"\n");
         return nElemetsToChange>0;
     }
 

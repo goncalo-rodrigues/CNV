@@ -24,6 +24,7 @@ public class RequestThread implements Runnable {
 
   public void run() {
       int sc=0, sr=0, wc=0, wr=0, coff=0, roff = 0;
+      long metric = 0;
     try {
       String query = t.getRequestURI().getQuery();
       Map<String, String> args = queryToMap(query);
@@ -70,7 +71,8 @@ public class RequestThread implements Runnable {
                     args.get("sc"), args.get("sr"), args.get("wc"), args.get("wr"), args.get("coff"), args.get("roff")};
 
             raytracer.Main.main(args_rt);
-            response += "<br> Metric:" + StatisticsDotMethodTool.getMetric() + "<br>";
+            metric = StatisticsDotMethodTool.getMetric();
+            response += "<br> Metric:" + metric + "<br>";
             response += "Time taken:" + StatisticsDotMethodTool.getTime()*1e-9 + "<br>";
             response += "<br> <a href=\"images/"+ outName + "\">See image here</a>";
           }
@@ -96,14 +98,13 @@ public class RequestThread implements Runnable {
           if(!f.exists() && !f.isDirectory())
             {
                     f.createNewFile();
-                    Files.write(Paths.get(statsFilename), "sc,sr,wc,wr,coff,roff,metric,metric2,time\n".getBytes(),
+                    Files.write(Paths.get(statsFilename), "sc,sr,wc,wr,coff,roff,metric,time\n".getBytes(),
                             StandardOpenOption.WRITE);
             }
           Files.write(Paths.get(statsFilename),
-                  String.format(Locale.US, "%d,%d,%d,%d,%d,%d,%d,%d,%f\n",
+                  String.format(Locale.US, "%d,%d,%d,%d,%d,%d,%d,%f\n",
                           sc, sr, wc, wr, coff, roff,
-                          StatisticsDotMethodTool.getMetric(),
-                          StatisticsDotMethodTool.getMetric2(),
+                          metric,
                           StatisticsDotMethodTool.getTime()*1e-9).getBytes(),
                   StandardOpenOption.APPEND);
         }catch (IOException e) {
@@ -114,12 +115,12 @@ public class RequestThread implements Runnable {
 
           try {
               File f = new File(statsFilename);
-              HashMap<String, BigInteger> methodMap = StatisticsToolToFile.getMethodMap();
+              HashMap<String, BigInteger> methodMap = StatisticsToolToFile.getMethodInstrMap();
               if((!f.exists() && !f.isDirectory()) || keys==null)
               {
                   f.createNewFile();
                   keys = new ArrayList<>(methodMap.keySet());
-                  String columnNames = "sc,sr,wc,wr,coff,roff,size,instrs";
+                  String columnNames = "sc,sr,wc,wr,coff,roff,size,instrs,bb";
                   for (String key: keys) {
                       columnNames += ","+key;
                   }
@@ -127,8 +128,8 @@ public class RequestThread implements Runnable {
                   Files.write(Paths.get(statsFilename), columnNames.getBytes(),
                           StandardOpenOption.WRITE);
               }
-              String columnVals = String.format(Locale.US, "%d,%d,%d,%d,%d,%d,%d,%d",
-                      sc,sr,wc,wr,coff,roff,wc*wr,StatisticsToolToFile.getInstrs());
+              String columnVals = String.format(Locale.US, "%d,%d,%d,%d,%d,%d,%d,%d,%d",
+                      sc,sr,wc,wr,coff,roff,wc*wr,StatisticsToolToFile.getInstrs(),StatisticsToolToFile.getBBcount());
               for (String key: keys) {
                   columnVals += ","+ (methodMap.containsKey(key) ? methodMap.get(key).toString() : "0");
               }
