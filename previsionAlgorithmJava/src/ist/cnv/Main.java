@@ -21,9 +21,9 @@ public class Main {
 
         //Medium request
         System.out.println(oracle.estimateCost("test01",8000,6000,1600,
-                1200, 0,6400));
+                1200, 0,640));
                 oracle.insertData("test01",8000,6000,1600,
-                1200, 0,6400 ,100000);
+                1200, 0,640,100000);
 
         //Heavy request
         System.out.println(oracle.estimateCost("test01",20000,15000,3250,
@@ -32,15 +32,15 @@ public class Main {
                 2500, 5000,6500 ,100000);
 
 
-        oracle.insertData("test04",50,50,100,
-                100, 0,0,10000);
-        oracle.insertData("test02",8,8,100,
-                100, 10,10,120);
-        System.out.println(oracle.estimateCost("test01", 10, 10,
-                100,100, 0,0));
+        oracle.insertData("test04",100,100,50,
+                50, 0,0,10000);
+        oracle.insertData("test02",100,100,8,
+                8, 10,10,120);
+        System.out.println(oracle.estimateCost("test01", 100, 100,
+                10,10, 0,0));
 
-        System.out.println(oracle.estimateCost("test01", 10, 10,
-                1000,1000, 0,0));
+        System.out.println(oracle.estimateCost("test01", 1000, 1000,
+                100,100, 0,0));
 
         oracle.saveAll();
     }
