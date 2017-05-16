@@ -26,7 +26,7 @@ public class HeartbeatThread implements Runnable {
         boolean isDone = false;
         while (!isDone) {
             try {
-                URL ws = new URL(new URL(worker.getAddress()), "ping");
+                URL ws = new URL(new URL("http://" + worker.getAddress()), "ping");
                 HttpURLConnection wsc = (HttpURLConnection) ws.openConnection();
                 String responseBody = getResponse(wsc.getInputStream());
                 if (responseBody.length() <= 0) {
