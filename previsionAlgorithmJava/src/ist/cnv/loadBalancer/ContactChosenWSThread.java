@@ -76,6 +76,10 @@ public class ContactChosenWSThread implements Runnable {
             }
 
         }
+
+        if (worker.getWorkload()==0 && worker.isDeleted()) {
+            handler.terminateWorker(worker);
+        }
     }
 
     private String getResponse(InputStream is) throws IOException {

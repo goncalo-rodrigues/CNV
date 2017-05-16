@@ -7,6 +7,7 @@ import java.net.URL;
 public class Worker {
     private String id;
     private String address;
+    private boolean deleted = false;
 
     public int workload = 0;
 
@@ -16,6 +17,14 @@ public class Worker {
     }
 
     public String getId(){ return id;}
+
+    public void delete() {
+        deleted = true;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
 
     public String getAddress(){ return address;}
 

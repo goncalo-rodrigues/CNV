@@ -104,7 +104,6 @@ public class RedirectRequest implements HttpHandler{
         synchronized (workers) {
             if (workers.contains(worker)) {
                 workers.remove(worker);
-                workerFactory.terminateWorker(worker);
                 System.out.println("Removed worker " + worker.getAddress());
                 if (workers.size() + unbornMachines <= 0) {
                     System.out.println("WARNING!! NO MACHINES AVAILABLE! Creating new");
@@ -113,9 +112,27 @@ public class RedirectRequest implements HttpHandler{
             }
         }
 
+        terminateWorker(worker);
         if (noWorkers) {
             createNewWorker();
         }
+    }
+
+    public void killWorker(Worker worker) {
+        synchronized (workers) {
+            if (workers.contains(worker)) {
+                workers.remove(worker);
+                worker.delete();
+            }
+        }
+
+        if (worker.getWorkload() == 0) {
+            terminateWorker(worker);
+        }
+    }
+
+    public void terminateWorker(Worker worker) {
+        workerFactory.terminateWorker(worker);
     }
 
     public void spawnWorker(Worker worker) {
