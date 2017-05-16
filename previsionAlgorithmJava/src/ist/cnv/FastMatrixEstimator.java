@@ -8,7 +8,7 @@ import java.util.ArrayList;
  */
 
 public class FastMatrixEstimator {
-    private static final int SIDE = 40;
+    private static final int SIDE = 39;
     private static final int LINE = 0;
     private static final int COLUMN = 1;
 
