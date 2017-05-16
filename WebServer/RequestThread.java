@@ -14,7 +14,7 @@ import raytracer.Main;
 
 public class RequestThread implements Runnable {
   private static String statsFilename = "stats.txt";
-  private static boolean debug = true;
+  private static boolean debug = false;
   private HttpExchange t = null;
   private static ArrayList<String> keys;
 
@@ -30,13 +30,8 @@ public class RequestThread implements Runnable {
       Map<String, String> args = queryToMap(query);
       String response = "";
 
-      //for (Map.Entry e : args.entrySet()) {
-      //response += e.getKey() + "\t" + e.getValue() + "\n";
-      //}
-      //response += "###";
-
-      response += "<!doctype html><head></head><body>";
-      response = String.valueOf(Thread.currentThread().getId());
+//      response += "<!doctype html><head></head><body>";
+//      response = String.valueOf(Thread.currentThread().getId());
       try {
         if(args.containsKey("f") && args.containsKey("sc") && args.containsKey("sr") && args.containsKey("wc") &&
                 args.containsKey("wr") && args.containsKey("coff") && args.containsKey("roff")) {
@@ -72,9 +67,11 @@ public class RequestThread implements Runnable {
 
             raytracer.Main.main(args_rt);
             metric = StatisticsDotMethodTool.getMetric();
-            response += "<br> Metric:" + metric + "<br>";
-            response += "Time taken:" + StatisticsDotMethodTool.getTime()*1e-9 + "<br>";
-            response += "<br> <a href=\"images/"+ outName + "\">See image here</a>";
+            response += String.valueOf(metric) + "\n";
+            response += "images/" + outName + "\n";
+//            response += "<br> Metric:" + metric + "<br>";
+//            response += "Time taken:" + StatisticsDotMethodTool.getTime()*1e-9 + "<br>";
+//            response += "<br> <a href=\"images/"+ outName + "\">See image here</a>";
           }
         }
 
@@ -86,9 +83,9 @@ public class RequestThread implements Runnable {
         response += "\nFile was not found. Please try again.";
       }
 
-      response += "</body></html>";
+//      response += "</body></html>";
       
-      t.getResponseHeaders().set("Content-type", "text/html");
+      t.getResponseHeaders().set("Content-type", "text/plain");
       t.sendResponseHeaders(200, response.length());
 
       boolean all_metrics = false;

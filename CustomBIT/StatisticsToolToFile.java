@@ -28,6 +28,7 @@ import java.io.PrintWriter;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.MathContext;
+import java.sql.BatchUpdateException;
 import java.util.*;
 import java.math.BigInteger;
 
@@ -234,8 +235,16 @@ public class StatisticsToolToFile
 		return dyn.get(Thread.currentThread().getId()).getMethodMap();
 	}
 
+	public static HashMap<String, BigInteger> getMethodInstrMap() {
+	    return dyn.get(Thread.currentThread().getId()).getMethodBBMap();
+    }
+
 	public static long getInstrs() {
         return dyn.get(Thread.currentThread().getId()).getInstrCount();
+    }
+
+    public static long getBBcount() {
+	    return dyn.get(Thread.currentThread().getId()).getBBCount();
     }
 
     public static synchronized void printDynamic(String foo)
