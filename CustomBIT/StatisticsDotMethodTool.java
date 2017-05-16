@@ -81,12 +81,23 @@ public class StatisticsDotMethodTool {
         metric[threadId % max_threads]++;
     }
 
-    public static long getMetric() {
+    public static long getMetricAndUnlock() {
         int threadId = (int) Thread.currentThread().getId();
         int id = threadId % max_threads;
         long val = metric[id];
         locks[id].unlock();
         return val;
+    }
+
+    public static long getMetric() {
+        int threadId = (int) Thread.currentThread().getId();
+        int id = threadId % max_threads;
+        long val = metric[id];
+        return val;
+    }
+
+    public static long getMetric(long id) {
+        return metric[(int)id%max_threads];
     }
 
     public static long getTime() {

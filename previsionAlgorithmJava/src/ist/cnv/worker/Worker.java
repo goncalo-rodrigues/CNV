@@ -3,12 +3,16 @@ package ist.cnv.worker;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class Worker {
     private String id;
     private String address;
     private boolean deleted = false;
 
+    public HashMap<String, Long> workloads = new HashMap<>();
     public int workload = 0;
 
     public Worker(String workerID,String workerAddress){
@@ -24,6 +28,16 @@ public class Worker {
 
     public boolean isDeleted() {
         return deleted;
+    }
+
+    public void addRequest(String rid, long prevision) {
+        workloads.put(rid, prevision);
+        workload+=prevision;
+    }
+
+    public void removeRequest(String rid) {
+        workload-=workloads.get(rid);
+        workloads.remove(rid);
     }
 
     public String getAddress(){ return address;}

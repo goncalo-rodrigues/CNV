@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.sun.net.httpserver.HttpExchange;
 
 import raytracer.Main;
@@ -17,6 +19,7 @@ public class RequestThread implements Runnable {
   private static boolean debug = false;
   private HttpExchange t = null;
   private static ArrayList<String> keys;
+  public static ConcurrentHashMap<String, Long> requestIdToThreadId = new ConcurrentHashMap<>();
 
   public RequestThread(HttpExchange t) {
     this.t = t;
@@ -29,6 +32,7 @@ public class RequestThread implements Runnable {
       String query = t.getRequestURI().getQuery();
       Map<String, String> args = queryToMap(query);
       String response = "";
+      String rid = null;
 
 //      response += "<!doctype html><head></head><body>";
 //      response = String.valueOf(Thread.currentThread().getId());
@@ -36,6 +40,10 @@ public class RequestThread implements Runnable {
         if(args.containsKey("f") && args.containsKey("sc") && args.containsKey("sr") && args.containsKey("wc") &&
                 args.containsKey("wr") && args.containsKey("coff") && args.containsKey("roff")) {
 
+            if (args.containsKey("rid")) {
+                rid = args.get("rid");
+                requestIdToThreadId.put(rid, Thread.currentThread().getId());
+            }
           boolean cont = true;
 
           sc = Integer.parseInt(args.get("sc"));
@@ -66,7 +74,7 @@ public class RequestThread implements Runnable {
                     args.get("sc"), args.get("sr"), args.get("wc"), args.get("wr"), args.get("coff"), args.get("roff")};
 
             raytracer.Main.main(args_rt);
-            metric = StatisticsDotMethodTool.getMetric();
+            metric = StatisticsDotMethodTool.getMetricAndUnlock();
             response += String.valueOf(metric) + "\n";
             response += "images/" + outName + "\n";
 //            response += "<br> Metric:" + metric + "<br>";
@@ -138,6 +146,10 @@ public class RequestThread implements Runnable {
           }
 
       }
+
+      if (rid != null)
+        requestIdToThreadId.remove(rid);
+
         OutputStream os = t.getResponseBody();
         os.write(response.getBytes());
         os.close();

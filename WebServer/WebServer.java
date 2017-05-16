@@ -1,5 +1,7 @@
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.util.Map;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -16,6 +18,20 @@ public class WebServer {
         Thread thread = new Thread(rt);
         thread.start();
       }
+    });
+
+    server.createContext("/metrics", new HttpHandler() {
+        @Override
+        public void handle(HttpExchange httpExchange) throws IOException {
+            String response = "";
+            for (Map.Entry<String, Long> kv: RequestThread.requestIdToThreadId.entrySet()) {
+                response += kv.getKey() + "," + StatisticsDotMethodTool.getMetric(kv.getValue()) + "\n";
+            }
+            httpExchange.sendResponseHeaders(200, response.length());
+            OutputStream os = httpExchange.getResponseBody();
+            os.write(response.getBytes());
+            os.close();
+        }
     });
     server.setExecutor(null); // creates a default executor
     server.start();
