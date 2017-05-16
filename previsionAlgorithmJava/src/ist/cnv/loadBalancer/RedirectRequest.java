@@ -27,17 +27,19 @@ public class RedirectRequest implements HttpHandler{
     public void handle(HttpExchange t) {
         // Decides which WebServer will handle the request
         if(workers.size() == 0) {
-            while (!workerFactory.isWorkerReady(bornWorker))
+            while (!workerFactory.isWorkerReady(bornWorker)) {
                 try {
                     Thread.sleep(5000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+            }
             workers.add(bornWorker);
             bornWorker = null;
         }
 
         String url = "http://" + choseWorkerToRequest();
+        System.out.println("R Going to: "+ url);
 
         // Sends the request and waits for the result
         ContactChosenWSThread cct = new ContactChosenWSThread(t, url);
@@ -46,10 +48,10 @@ public class RedirectRequest implements HttpHandler{
     }
 
     private String choseWorkerToRequest(){
+        System.out.println("->choseWorkerToRequest()");
         Worker chosenWorker = null;
         synchronized (chosingWorkerLock) {
             //In case that we dont have any worker ready
-
             updateWorkersState();
             Collections.sort(workers, new WorkerComparator());
             for (Worker w : workers)
@@ -57,6 +59,7 @@ public class RedirectRequest implements HttpHandler{
                     chosenWorker = w;
                     break;
                 }
+            System.out.println(4);
 
             if (chosenWorker == null) {
                 createNewWorker();
@@ -76,9 +79,12 @@ public class RedirectRequest implements HttpHandler{
 
     private void updateWorkersState(){
     //TODO check if all still alive
-        if(workerFactory.isWorkerReady(bornWorker)){
-            workers.add(bornWorker);
-            bornWorker = null;
+        if(isCreatingWorker && bornWorker!=null) {
+            if (workerFactory.isWorkerReady(bornWorker)) {
+                workers.add(bornWorker);
+                isCreatingWorker = false;
+                bornWorker = null;
+            }
         }
     }
 

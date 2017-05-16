@@ -13,7 +13,7 @@ import com.amazonaws.services.ec2.model.*;
 public class AWSWorkerFactory {
     public static final String IMAGEID = "ami-42128022"; //TODO replace this with our image name
     public static final String INSTANCETYPE = "t2.micro";
-    public static final String SECURITYGROUP = "default"; //TODO replace this , this was in sdk sample code
+    public static final String SECURITYGROUP = "all";//"default"; //TODO replace this , this was in sdk sample code
 
 
     private AmazonEC2 amazonEC2 ;
