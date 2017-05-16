@@ -40,8 +40,8 @@ public class PrevisionAlgorithm {
         //TODO @Nuno the conversion is here
         for(File file:files)
             if(file.name.equals(fileName))
-                return (int) (propotion *(float) estimateCost(coords.get(0)[0] - 1, coords.get(0)[1] - 1,
-                        coords.get(1)[0] - 1, coords.get(1)[1],file) - 1);//TODO fix
+                return (int) (propotion *(float) estimateCost(coords.get(0)[0] , coords.get(0)[1] ,
+                        coords.get(1)[0] , coords.get(1)[1],file) );//TODO fix
         return 0;
     }
 
@@ -73,8 +73,8 @@ public class PrevisionAlgorithm {
         //TODO @Nuno the conversion is here
         for(File file : files)
             if(file.name.equals(fileName)) {
-                changed = insertData(coords.get(0)[0] - 1 , coords.get(0)[1] - 1, coords.get(1)[0] - 1,
-                        coords.get(1)[1] - 1,  (int) (cost / propotion), file);//TODO fix
+                changed = insertData(coords.get(0)[0] , coords.get(0)[1] , coords.get(1)[0] ,
+                        coords.get(1)[1] ,  (int) (cost / propotion), file);//TODO fix
                 if(changed)
                     file.save();
 
