@@ -31,6 +31,7 @@ public class ContactChosenWSThread implements Runnable {
         try {
             URL ws = new URL(request);
             HttpURLConnection wsc = (HttpURLConnection) ws.openConnection();
+            // set timeout??
             responseBody = getResponse(wsc.getInputStream());
         } catch (MalformedURLException e) {
             // Not likely to happen

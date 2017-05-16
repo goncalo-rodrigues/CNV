@@ -16,6 +16,7 @@ public class HeartbeatThread implements Runnable {
     private final Worker worker;
     private RedirectRequest handler;
     private final static int PING_PERIOD = 5000;
+    private final static int PING_TIMEOUT = 10000;
     public HeartbeatThread(final Worker worker, RedirectRequest handler) {
         this.worker = worker;
         this.handler = handler;
@@ -24,10 +25,12 @@ public class HeartbeatThread implements Runnable {
     @Override
     public void run() {
         boolean isDone = false;
+
         while (!isDone) {
             try {
                 URL ws = new URL(new URL("http://" + worker.getAddress()), "ping");
                 HttpURLConnection wsc = (HttpURLConnection) ws.openConnection();
+                wsc.setConnectTimeout(PING_TIMEOUT);
                 String responseBody = getResponse(wsc.getInputStream());
                 if (responseBody.length() <= 0) {
                     // didn't respond :(
