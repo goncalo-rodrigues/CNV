@@ -38,7 +38,7 @@ public class RedirectRequest implements HttpHandler{
             bornWorker = null;
         }
 
-        String url = "http://" + choseWorkerToRequest();
+        String url = "http://" + choseWorkerToRequest()+ "/r.html?";
         System.out.println("R Going to: "+ url);
 
         // Sends the request and waits for the result
