@@ -2,6 +2,7 @@ package ist.cnv;
 
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static java.lang.Math.abs;
 
@@ -28,17 +29,19 @@ public class PrevisionAlgorithm {
 
 
     public int estimateCost(String fileName, int sc, int sr,
-                            int wc, int wr, int coof,int roof){
+                            int wc, int wr, int coff,int roff){
         int requestPixels = sr*sc;
         float propotion = requestPixels / 1600;
         if(!fileNames.contains(fileName)) {
             files.add(new File(fileName,1, dynamo));
             fileNames.add(fileName);
         }
+        List<int[]> coords = new FastMatrixEstimator(1000 , sr,  sc, wr, wc, roff, coff).getTransformedRequest();
         //TODO @Nuno the conversion is here
         for(File file:files)
             if(file.name.equals(fileName))
-                return (int) (propotion *(float) estimateCost(0,0,39,39,file));//TODO fix
+                return (int) (propotion *(float) estimateCost(coords.get(0)[0] - 1, coords.get(0)[1] - 1,
+                        coords.get(1)[0] - 1, coords.get(1)[1],file) - 1);//TODO fix
         return 0;
     }
 
@@ -55,10 +58,12 @@ public class PrevisionAlgorithm {
 
 
     public void insertData(String fileName, int sc, int sr,
-                            int wc, int wr, int coof,int roof,int cost){
+                            int wc, int wr, int coff,int roff,int cost){
         int requestPixels = sr*sc;
         float propotion = requestPixels / 1600;
         boolean changed;
+
+        List<int[]> coords = new FastMatrixEstimator((long)cost , sr,  sc, wr, wc, roff, coff).getTransformedRequest();
 
         if(!fileNames.contains(fileName)){
             files.add(new File(fileName,1,dynamo));
@@ -68,7 +73,8 @@ public class PrevisionAlgorithm {
         //TODO @Nuno the conversion is here
         for(File file : files)
             if(file.name.equals(fileName)) {
-                changed = insertData(0, 0, 20, 20, (int) (cost / propotion), file);//TODO fix
+                changed = insertData(coords.get(0)[0] - 1 , coords.get(0)[1] - 1, coords.get(1)[0] - 1,
+                        coords.get(1)[1] - 1,  (int) (cost / propotion), file);//TODO fix
                 if(changed)
                     file.save();
 
