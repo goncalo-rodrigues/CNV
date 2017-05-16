@@ -32,6 +32,7 @@ public class RedirectRequest implements HttpHandler{
         int numMachines = workers.size();
         if(numMachines == 0) {
             do {
+                System.out.println("Starting...");
                 try {
                     Thread.sleep(5000);
                 } catch (InterruptedException e) {
@@ -81,8 +82,7 @@ public class RedirectRequest implements HttpHandler{
         if (unbornMachines == 0) {
             isCreatingWorker = true;
             bornWorker = workerFactory.createWorker();
-            MetricPingThread pnt = new MetricPingThread(bornWorker, this);
-//            PingNewbornThread pnt = new PingNewbornThread(bornWorker, this);
+            PingNewbornThread pnt = new PingNewbornThread(bornWorker, this);
             Thread thread = new Thread(pnt);
             thread.start();
             unbornMachines++;
@@ -140,7 +140,8 @@ public class RedirectRequest implements HttpHandler{
         synchronized (workers) {
             System.out.println("Worker came to life " + worker.getAddress());
             workers.add(worker);
-            HeartbeatThread hbt = new HeartbeatThread(worker, this);
+            MetricPingThread hbt = new MetricPingThread(bornWorker, this);
+//            HeartbeatThread hbt = new HeartbeatThread(worker, this);
             Thread thread = new Thread(hbt);
             thread.start();
             unbornMachines--;

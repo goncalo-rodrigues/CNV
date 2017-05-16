@@ -40,16 +40,16 @@ make clean
 make
 
 # Reinstruments the raytracer code
-#java -cp $clpth StatisticsToolToFile -dynamic src/raytracer/ src/raytracer/
-#java -cp $clpth StatisticsToolToFile -dynamic src/raytracer/pigments src/raytracer/pigments
-#java -cp $clpth StatisticsToolToFile -dynamic src/raytracer/shapes/ src/raytracer/shapes
+java -cp $clpth StatisticsToolToFile -dynamic src/raytracer/ src/raytracer/
+java -cp $clpth StatisticsToolToFile -dynamic src/raytracer/pigments src/raytracer/pigments
+java -cp $clpth StatisticsToolToFile -dynamic src/raytracer/shapes/ src/raytracer/shapes
 #java -cp $clpth StatisticsFunctionCallsToFile -dynamic src/raytracer/ src/raytracer/
 #java -cp $clpth StatisticsFunctionCallsToFile -dynamic src/raytracer/pigments src/raytracer/pigments
 #java -cp $clpth StatisticsFunctionCallsToFile -dynamic src/raytracer/shapes/ src/raytracer/shapes
 
-java -cp $clpth StatisticsDotMethodTool src/raytracer/ src/raytracer/
-java -cp $clpth StatisticsDotMethodTool src/raytracer/pigments src/raytracer/pigments
-java -cp $clpth StatisticsDotMethodTool src/raytracer/shapes/ src/raytracer/shapes
+#java -cp $clpth StatisticsDotMethodTool src/raytracer/ src/raytracer/
+#java -cp $clpth StatisticsDotMethodTool src/raytracer/pigments src/raytracer/pigments
+#java -cp $clpth StatisticsDotMethodTool src/raytracer/shapes/ src/raytracer/shapes
 
 cd $init_dir
 
