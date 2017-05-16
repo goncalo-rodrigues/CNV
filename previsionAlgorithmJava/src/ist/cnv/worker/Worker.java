@@ -20,11 +20,15 @@ public class Worker {
     public String getAddress(){ return address;}
 
     public String getFullAddress() {
+        String res = null;
+
         try {
-            return new URL(new URL("http://" + address), "r.html").toString();
+            res = new URL(new URL("http://" + address), "r.html").toString();
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
+
+        return res;
     }
 
     public int getWorkload(){
