@@ -37,7 +37,7 @@ public class PrevisionAlgorithm {
             fileNames.add(fileName);
         }
         List<int[]> coords = new FastMatrixEstimator(1000 , sr,  sc, wr, wc, roff, coff).getTransformedRequest();
-        //TODO @Nuno the conversion is here
+
         for(File file:files)
             if(file.name.equals(fileName))
                 return (int) (propotion *(float) estimateCost(coords.get(0)[0] , coords.get(0)[1] ,
@@ -70,7 +70,6 @@ public class PrevisionAlgorithm {
             fileNames.add(fileName);
         }
 
-        //TODO @Nuno the conversion is here
         for(File file : files)
             if(file.name.equals(fileName)) {
                 changed = insertData(coords.get(0)[0] , coords.get(0)[1] , coords.get(1)[0] ,
