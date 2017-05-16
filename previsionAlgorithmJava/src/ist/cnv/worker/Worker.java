@@ -41,6 +41,7 @@ public class Worker {
             workloads.put(rid, prevision);
             workload+=prevision;
         }
+        System.out.println("Workload of " + id + " updated to " + workload);
     }
 
     public void removeRequest(String rid) {
@@ -48,7 +49,7 @@ public class Worker {
             workload-=workloads.get(rid);
             previsions.remove(rid);
         }
-
+        System.out.println("Workload of " + id + " updated to " + workload);
     }
 
     public void updateRequest(String rid, long metricSoFar) {
@@ -60,6 +61,7 @@ public class Worker {
             workloads.put(rid, neww);
             workload += (neww-oldw);
         }
+        System.out.println("Workload of " + id + " updated to " + workload);
     }
 
     public String getAddress(){ return address;}

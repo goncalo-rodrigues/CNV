@@ -28,7 +28,6 @@ public class MetricPingThread implements Runnable {
 
         while (!isDone) {
             try {
-                System.out.println("Pinging " + worker.getAddress());
                 URL ws = new URL(new URL("http://" + worker.getAddress()), "metrics");
                 HttpURLConnection wsc = (HttpURLConnection) ws.openConnection();
                 wsc.setConnectTimeout(PING_TIMEOUT);
