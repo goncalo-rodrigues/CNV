@@ -100,6 +100,7 @@ public class RedirectRequest implements HttpHandler{
         }
     }
 
+
     public void removeWorker(Worker worker) {
         boolean noWorkers = false;
         synchronized (workers) {

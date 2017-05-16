@@ -50,6 +50,11 @@ public class AWSWorkerFactory {
             System.out.println("ec3 == null");
         }
         RunInstancesResult  result = amazonEC2.runInstances(runInstanceRequest);
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         String id = result.getReservation().getInstances().get(0).getInstanceId();
         DescribeInstancesRequest describeInstanceRequest = new DescribeInstancesRequest().withInstanceIds(id);
         DescribeInstancesResult describeInstanceResult = amazonEC2.describeInstances(describeInstanceRequest);

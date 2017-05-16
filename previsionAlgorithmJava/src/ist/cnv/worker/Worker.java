@@ -38,6 +38,7 @@ public class Worker {
     public void addRequest(String rid, long prevision) {
         synchronized (lock) {
             previsions.put(rid, prevision);
+            workloads.put(rid, prevision);
             workload+=prevision;
         }
     }
@@ -54,9 +55,10 @@ public class Worker {
         synchronized (lock) {
             long w = previsions.get(rid);
             long p = w - metricSoFar;
-            workload -= workloads.get(rid);
-            workloads.put(rid, Math.max(0, p));
-            workload += workloads.get(rid);
+            long oldw = workloads.get(rid);
+            long neww = Math.max(0, p);
+            workloads.put(rid, neww);
+            workload += (neww-oldw);
         }
     }
 

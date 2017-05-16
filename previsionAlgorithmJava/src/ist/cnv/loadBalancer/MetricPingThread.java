@@ -28,7 +28,7 @@ public class MetricPingThread implements Runnable {
 
         while (!isDone) {
             try {
-                URL ws = new URL(new URL("http://" + worker.getAddress()), "ping");
+                URL ws = new URL(new URL("http://" + worker.getAddress()), "metrics");
                 HttpURLConnection wsc = (HttpURLConnection) ws.openConnection();
                 wsc.setConnectTimeout(PING_TIMEOUT);
                 getResponse(wsc.getInputStream());
@@ -37,6 +37,7 @@ public class MetricPingThread implements Runnable {
                 // ignore
                 System.out.println("Someone interruped me");
             } catch (Exception e) {
+                System.out.println("Machine unreachable " + e.getMessage());
                 handler.removeWorker(worker);
                 isDone = true;
             }
