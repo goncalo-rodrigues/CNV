@@ -14,6 +14,7 @@ public class ContactChosenWSThread implements Runnable {
     private String serverUrl = null;
     private RedirectRequest handler = null;
     private Worker worker;
+    private static int counter = 0;
 
 
     public ContactChosenWSThread(HttpExchange httpEx, Worker worker, RedirectRequest handler) {
@@ -27,8 +28,10 @@ public class ContactChosenWSThread implements Runnable {
         String query = httpEx.getRequestURI().getQuery();
         String request = serverUrl + query;
         String responseBody = null;
-
+        String rid = String.valueOf(counter++);
         try {
+            // todo: compute prevision
+            worker.addRequest(rid, 0);
             URL ws = new URL(request);
             HttpURLConnection wsc = (HttpURLConnection) ws.openConnection();
             // set timeout??
@@ -76,7 +79,7 @@ public class ContactChosenWSThread implements Runnable {
             }
 
         }
-
+        worker.removeRequest(rid);
         if (worker.getWorkload()==0 && worker.isDeleted()) {
             handler.terminateWorker(worker);
         }

@@ -81,7 +81,8 @@ public class RedirectRequest implements HttpHandler{
         if (unbornMachines == 0) {
             isCreatingWorker = true;
             bornWorker = workerFactory.createWorker();
-            PingNewbornThread pnt = new PingNewbornThread(bornWorker, this);
+            MetricPingThread pnt = new MetricPingThread(bornWorker, this);
+//            PingNewbornThread pnt = new PingNewbornThread(bornWorker, this);
             Thread thread = new Thread(pnt);
             thread.start();
             unbornMachines++;
