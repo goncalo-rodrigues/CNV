@@ -6,13 +6,18 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Worker {
     private String id;
     private String address;
     private boolean deleted = false;
 
-    public HashMap<String, Long> workloads = new HashMap<>();
+    private final Object lock = new Object();
+    private HashMap<String, Long> workloads = new HashMap<>();
+    private HashMap<String, Long> previsions = new HashMap<>();
     public int workload = 0;
 
     public Worker(String workerID,String workerAddress){
@@ -31,13 +36,28 @@ public class Worker {
     }
 
     public void addRequest(String rid, long prevision) {
-        workloads.put(rid, prevision);
-        workload+=prevision;
+        synchronized (lock) {
+            previsions.put(rid, prevision);
+            workload+=prevision;
+        }
     }
 
     public void removeRequest(String rid) {
-        workload-=workloads.get(rid);
-        workloads.remove(rid);
+        synchronized (lock) {
+            workload-=workloads.get(rid);
+            previsions.remove(rid);
+        }
+
+    }
+
+    public void updateRequest(String rid, long metricSoFar) {
+        synchronized (lock) {
+            long w = previsions.get(rid);
+            long p = w - metricSoFar;
+            workload -= workloads.get(rid);
+            workloads.put(rid, Math.max(0, p));
+            workload += workloads.get(rid);
+        }
     }
 
     public String getAddress(){ return address;}
