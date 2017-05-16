@@ -40,12 +40,26 @@ public class ContactChosenWSThread implements Runnable {
                     responseBody = "There was an error while processing the request!";
                     httpEx.sendResponseHeaders(500, responseBody.length());
                 }
-
                 else
                     httpEx.sendResponseHeaders(200, responseBody.length());
 
+                String[] values = responseBody.split("\n");
+                String response = "<!doctype html><head></head><body>";
+                if (values.length >= 2) {
+                    long metric = Long.parseLong(values[0]);
+                    // TODO: use this metric to update table, possibly in a background thread
+                    String imageUrl = values[1];
+                    URL mergedUrl = new URL(new URL(serverUrl), imageUrl);
+                    response += "Metric:" + metric + "<br>";
+                    response += "<br> <a href=\"images/"+ mergedUrl + "\">See image here</a>";
+                } else {
+                    response += "Something went wrong.";
+                }
+
+                response += "</body></html>";
+                httpEx.getResponseHeaders().set("Content-type", "text/html");
                 OutputStream os = httpEx.getResponseBody();
-                os.write(responseBody.getBytes());
+                os.write(response.getBytes());
                 os.close();
             } catch (IOException e) {
                 // Not likely to happen
