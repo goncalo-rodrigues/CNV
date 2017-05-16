@@ -16,7 +16,7 @@ public class AWSWorkerFactory {
     public static final String SECURITYGROUP = "default"; //TODO replace this , this was in sdk sample code
 
 
-    private AmazonEC2 ec2 ;
+    private AmazonEC2 amazonEC2 ;
     private RunInstancesRequest runInstanceRequest = null;
 
     public AWSWorkerFactory(){
@@ -32,9 +32,9 @@ public class AWSWorkerFactory {
                     e);
 
         }
-        ec2 = new AmazonEC2Client(credentials);
+        amazonEC2 = new AmazonEC2Client(credentials);
         Region region = Region.getRegion(Regions.US_WEST_2);
-        ec2.setRegion(region);
+        amazonEC2.setRegion(region);
 
         //we create 1 request that will e always the same
         runInstanceRequest = new RunInstancesRequest();
@@ -46,13 +46,13 @@ public class AWSWorkerFactory {
     }
 
     public Worker createWorker(){
-        if (ec2==null){
+        if (amazonEC2==null){
             System.out.println("ec3 == null");
         }
-        RunInstancesResult  result = ec2.runInstances(runInstanceRequest);
+        RunInstancesResult  result = amazonEC2.runInstances(runInstanceRequest);
         String id = result.getReservation().getInstances().get(0).getInstanceId();
         DescribeInstancesRequest describeInstanceRequest = new DescribeInstancesRequest().withInstanceIds(id);
-        DescribeInstancesResult describeInstanceResult = ec2.describeInstances(describeInstanceRequest);
+        DescribeInstancesResult describeInstanceResult = amazonEC2.describeInstances(describeInstanceRequest);
         String address = describeInstanceResult.getReservations().get(0).getInstances().get(0).getPublicDnsName();//TODO check if get ip is best
         return new Worker(id,address);
     }
@@ -61,25 +61,37 @@ public class AWSWorkerFactory {
         String instanceID = worker.getId();
         TerminateInstancesRequest terminateRequest = new TerminateInstancesRequest();
         terminateRequest.withInstanceIds(instanceID);
-        ec2.terminateInstances(terminateRequest);
+        amazonEC2.terminateInstances(terminateRequest);
     }
 
     public boolean isWorkerReady(Worker worker){
         String instanceID = worker.getId();
-        return true;//FIXME change to server request
-    }
+        DescribeInstanceStatusRequest statusRequest = new DescribeInstanceStatusRequest().withInstanceIds(instanceID);
+        DescribeInstanceStatusResult result = amazonEC2.describeInstanceStatus(statusRequest);
+
+        if(result.getInstanceStatuses()!=null && result.getInstanceStatuses().size()!=0) {
+            String status = result.getInstanceStatuses().get(0).getInstanceStatus().getStatus();
+            System.out.println(status);
+            if (status.equals("ok"))
+                return true;
+        }
+        return false;
+    }//result.instanceStatuses[0].instanceStatus.Status  "ok" se estiver pronta
 
     public static void main(String[] args){
         AWSWorkerFactory factory = new AWSWorkerFactory();
         Worker worker1 = factory.createWorker();
-        System.out.println("CREATED  instanceid="+worker1.getId()+" address:"+worker1.getAddress());
-        try {
-            Thread.sleep(80000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        System.out.println("CREATED  instanceid: "+worker1.getId()+" address:"+worker1.getAddress());
+        while(!factory.isWorkerReady(worker1)) {
+            System.out.println("instanceid = "+worker1.getId()+" NOT READY");
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
         factory.terminateWorker(worker1);
-        System.out.println("finisherd");
+        System.out.println("finished");
     }
 
 }
