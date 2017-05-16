@@ -1,6 +1,7 @@
 package ist.cnv.loadBalancer;
 
 import com.sun.net.httpserver.HttpExchange;
+import ist.cnv.worker.Worker;
 
 import java.io.*;
 import java.net.ConnectException;
@@ -11,11 +12,15 @@ import java.net.URL;
 public class ContactChosenWSThread implements Runnable {
     private HttpExchange httpEx = null;
     private String serverUrl = null;
+    private RedirectRequest handler = null;
+    private Worker worker;
 
 
-    public ContactChosenWSThread(HttpExchange httpEx, String serverUrl) {
+    public ContactChosenWSThread(HttpExchange httpEx, Worker worker, RedirectRequest handler) {
         this.httpEx = httpEx;
-        this.serverUrl = serverUrl;
+        this.serverUrl = worker.getFullAddress();
+        this.handler = handler;
+        this.worker = worker;
     }
 
     public void run() {
@@ -35,36 +40,40 @@ public class ContactChosenWSThread implements Runnable {
         } catch(IOException e) {
             e.printStackTrace();
         } finally {
-            try {
-                if(responseBody == null) {
-                    responseBody = "There was an error while processing the request!";
-                    httpEx.sendResponseHeaders(500, responseBody.length());
-                }
-                else
+            if(responseBody == null) {
+//                    responseBody = "There was an error while processing the request!";
+//                    httpEx.sendResponseHeaders(500, responseBody.length());
+                // try again, maybe remove this machine?
+                handler.removeWorker(worker);
+                handler.handle(httpEx);
+            }
+            else {
+                try {
                     httpEx.sendResponseHeaders(200, responseBody.length());
 
-                String[] values = responseBody.split("\n");
-                String response = "<!doctype html><head></head><body>";
-                if (values.length >= 2) {
-                    long metric = Long.parseLong(values[0]);
-                    // TODO: use this metric to update table, possibly in a background thread
-                    String imageUrl = values[1];
-                    URL mergedUrl = new URL(new URL(serverUrl), imageUrl);
-                    response += "Metric:" + metric + "<br>";
-                    response += "<br> <a href=\"images/"+ mergedUrl + "\">See image here</a>";
-                } else {
-                    response += "Something went wrong.";
-                }
+                    String[] values = responseBody.split("\n");
+                    String response = "<!doctype html><head></head><body>";
+                    if (values.length >= 2) {
+                        long metric = Long.parseLong(values[0]);
+                        // TODO: use this metric to update table, possibly in a background thread
+                        String imageUrl = values[1];
+                        URL mergedUrl = new URL(new URL(serverUrl), imageUrl);
+                        response += "Metric:" + metric + "<br>";
+                        response += "<br> <a href=\"images/"+ mergedUrl + "\">See image here</a>";
+                    } else {
+                        response += "Something went wrong.";
+                    }
 
-                response += "</body></html>";
-                httpEx.getResponseHeaders().set("Content-type", "text/html");
-                OutputStream os = httpEx.getResponseBody();
-                os.write(response.getBytes());
-                os.close();
-            } catch (IOException e) {
-                // Not likely to happen
-                e.printStackTrace();
+                    response += "</body></html>";
+                    httpEx.getResponseHeaders().set("Content-type", "text/html");
+                    OutputStream os = httpEx.getResponseBody();
+                    os.write(response.getBytes());
+                    os.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
+
         }
     }
 

@@ -17,6 +17,14 @@ public class WebServer {
         thread.start();
       }
     });
+    server.createContext("/ping", new HttpHandler() {
+      @Override
+      public void handle(HttpExchange httpExchange) throws IOException {
+        PingThread pt = new PingThread(httpExchange);
+        Thread thread = new Thread(pt);
+        thread.start();
+      }
+    });
     server.setExecutor(null); // creates a default executor
     server.start();
   }

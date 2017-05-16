@@ -9,50 +9,57 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class RedirectRequest implements HttpHandler{
-    private List<Worker> workers = new ArrayList<Worker>();
+    private final List<Worker> workers;
     private Boolean isCreatingWorker =  false;
     private Worker bornWorker = null;
     private AWSWorkerFactory workerFactory;
-    private Object chosingWorkerLock = new Object();
     private static final int WORKTHREASHOLD = 5000000;//TODO put a nonRandom value
+    private int unbornMachines = 0;
 
-    public RedirectRequest(){
+    public RedirectRequest(final List<Worker> workers){
         workerFactory = new AWSWorkerFactory();
         createNewWorker();
+        this.workers = workers;
     }
 
     @Override
     public void handle(HttpExchange t) {
         // Decides which WebServer will handle the request
-        if(workers.size() == 0) {
-            while (!workerFactory.isWorkerReady(bornWorker)) {
+
+        int numMachines = workers.size();
+        if(numMachines == 0) {
+            do {
                 try {
                     Thread.sleep(5000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-            }
-            workers.add(bornWorker);
-            bornWorker = null;
+
+                synchronized (workers) {
+                    numMachines = workers.size();
+                }
+
+            } while (numMachines == 0);
         }
 
-        String url = "http://" + choseWorkerToRequest()+ "/r.html?";
-        System.out.println("R Going to: "+ url);
+        Worker w = choseWorkerToRequest();
+        System.out.println("R Going to: "+ w.getFullAddress());
 
         // Sends the request and waits for the result
-        ContactChosenWSThread cct = new ContactChosenWSThread(t, url);
+        ContactChosenWSThread cct = new ContactChosenWSThread(t, w, this);
         Thread thread = new Thread(cct);
         thread.start();
     }
 
-    private String choseWorkerToRequest(){
+    private Worker choseWorkerToRequest(){
         System.out.println("->choseWorkerToRequest()");
         Worker chosenWorker = null;
-        synchronized (chosingWorkerLock) {
+        synchronized (workers) {
             //In case that we dont have any worker ready
-            updateWorkersState();
+//            updateWorkersState();
             Collections.sort(workers, new WorkerComparator());
             for (Worker w : workers)
                 if (w.getWorkload() < WORKTHREASHOLD) {
@@ -66,14 +73,18 @@ public class RedirectRequest implements HttpHandler{
                 chosenWorker = workers.get(0);//FIXME not sure if is the best choise;
             }
         }
-        return chosenWorker.getAddress();
+        return chosenWorker;
 
     }
 
     private void createNewWorker(){
-        if (!isCreatingWorker) {
+        if (unbornMachines == 0) {
             isCreatingWorker = true;
             bornWorker = workerFactory.createWorker();
+            PingNewbornThread pnt = new PingNewbornThread(bornWorker, this);
+            Thread thread = new Thread(pnt);
+            thread.start();
+            unbornMachines++;
         }
     }
 
@@ -85,6 +96,36 @@ public class RedirectRequest implements HttpHandler{
                 isCreatingWorker = false;
                 bornWorker = null;
             }
+        }
+    }
+
+    public void removeWorker(Worker worker) {
+        boolean noWorkers = false;
+        synchronized (workers) {
+            if (workers.contains(worker)) {
+                workers.remove(worker);
+                workerFactory.terminateWorker(worker);
+                System.out.println("Removed worker " + worker.getAddress());
+                if (workers.size() + unbornMachines <= 0) {
+                    System.out.println("WARNING!! NO MACHINES AVAILABLE! Creating new");
+                    noWorkers = true;
+                }
+            }
+        }
+
+        if (noWorkers) {
+            createNewWorker();
+        }
+    }
+
+    public void spawnWorker(Worker worker) {
+        synchronized (workers) {
+            System.out.println("Worker came to life " + worker.getAddress());
+            workers.add(worker);
+            HeartbeatThread hbt = new HeartbeatThread(worker, this);
+            Thread thread = new Thread(hbt);
+            thread.start();
+            unbornMachines--;
         }
     }
 
