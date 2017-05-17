@@ -2,13 +2,13 @@ package ist.cnv.loadBalancer;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import ist.cnv.PrevisionAlgorithm;
 import ist.cnv.worker.AWSWorkerFactory;
 import ist.cnv.worker.Worker;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class RedirectRequest implements HttpHandler{
@@ -18,20 +18,63 @@ public class RedirectRequest implements HttpHandler{
     private AWSWorkerFactory workerFactory;
     private static final int WORKTHREASHOLD = 5000000;//TODO put a nonRandom value
     private int unbornMachines = 0;
+    private PrevisionAlgorithm oracle;
 
     public RedirectRequest(final List<Worker> workers){
         workerFactory = new AWSWorkerFactory();
         createNewWorker();
         this.workers = workers;
+        ArrayList<String> imagesNames = new ArrayList<>();
+        imagesNames.add("test01");
+
+        oracle = new PrevisionAlgorithm(imagesNames);
+        oracle.addFile("test02", 0.56942257);
+        oracle.addFile("test03", 0.74359062);
+        oracle.addFile("test04", 0.11292513);
+        oracle.addFile("test05", 0.21124866);
     }
 
     @Override
     public void handle(HttpExchange t) {
         // Decides which WebServer will handle the request
+        Map<String, String> args = queryToMap(t.getRequestURI().getQuery());
+        int sc,sr,wc,wr,coff,roff;
+        String fname;
+        long prevision =0;
+        if(!(args.containsKey("f") && args.containsKey("sc") && args.containsKey("sr") && args.containsKey("wc") &&
+                args.containsKey("wr") && args.containsKey("coff") && args.containsKey("roff"))) {
+            handleError("Missing arguments", t);
+            return;
+        }
+
+        fname = args.get("f");
+        sc = Integer.parseInt(args.get("sc"));
+        sr = Integer.parseInt(args.get("sr"));
+        wc = Integer.parseInt(args.get("wc"));
+        wr = Integer.parseInt(args.get("wr"));
+        coff = Integer.parseInt(args.get("coff"));
+        roff = Integer.parseInt(args.get("roff"));
+        boolean validated = false;
+        if(wc > sc) {
+            handleError("wc>sc", t);
+        } else if(wr > sr) {
+            handleError("wr>sr", t);
+        } else if(coff > sc - wc) {
+            handleError("coff>(sc-wc)", t);
+        } else if(roff > sr - wr) {
+            handleError("roff>(sr-wr)", t);
+        } else {
+            validated = true;
+        }
+        if (!validated) return;
+
+        prevision = computePrevision(fname, sc,sr,wc,wr,coff,roff);
 
         int numMachines = workers.size();
+
         if(numMachines == 0) {
             do {
+                System.out.println("Starting...");
                 try {
                     Thread.sleep(5000);
                 } catch (InterruptedException e) {
@@ -49,9 +92,30 @@ public class RedirectRequest implements HttpHandler{
         System.out.println("R Going to: "+ w.getFullAddress());
 
         // Sends the request and waits for the result
-        ContactChosenWSThread cct = new ContactChosenWSThread(t, w, this);
+        ContactChosenWSThread cct = new ContactChosenWSThread(t, w, this, prevision);
+        cct.setParameters(fname,sc,sr,wc,wr,coff,roff);
         Thread thread = new Thread(cct);
         thread.start();
+    }
+
+    private void handleError(String s, HttpExchange t) {
+        String response = s + "\n" + "Please try again";
+        try {
+            OutputStream os = t.getResponseBody();
+            t.sendResponseHeaders(200, response.length());
+            os.write(response.getBytes());
+            os.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private long computePrevision(String f, int sc, int sr, int wc, int wr, int coff, int roff) {
+        return oracle.estimateCost(f, sc, sr, wc, wr, coff, roff);
+    }
+
+    public void update(String f, int sc, int sr, int wc, int wr, int coff, int roff, long cost) {
+        oracle.insertData(f, sc, sr, wc, wr, coff, roff, cost);
     }
 
     private Worker choseWorkerToRequest(){
@@ -66,11 +130,9 @@ public class RedirectRequest implements HttpHandler{
                     chosenWorker = w;
                     break;
                 }
-            System.out.println(4);
 
             if (chosenWorker == null) {
-                createNewWorker();
-                chosenWorker = workers.get(0);//FIXME not sure if is the best choise;
+                chosenWorker = workers.get(workers.size()-1);
             }
         }
         return chosenWorker;
@@ -81,8 +143,7 @@ public class RedirectRequest implements HttpHandler{
         if (unbornMachines == 0) {
             isCreatingWorker = true;
             bornWorker = workerFactory.createWorker();
-            MetricPingThread pnt = new MetricPingThread(bornWorker, this);
-//            PingNewbornThread pnt = new PingNewbornThread(bornWorker, this);
+            PingNewbornThread pnt = new PingNewbornThread(bornWorker, this);
             Thread thread = new Thread(pnt);
             thread.start();
             unbornMachines++;
@@ -99,6 +160,7 @@ public class RedirectRequest implements HttpHandler{
             }
         }
     }
+
 
     public void removeWorker(Worker worker) {
         boolean noWorkers = false;
@@ -140,7 +202,8 @@ public class RedirectRequest implements HttpHandler{
         synchronized (workers) {
             System.out.println("Worker came to life " + worker.getAddress());
             workers.add(worker);
-            HeartbeatThread hbt = new HeartbeatThread(worker, this);
+            MetricPingThread hbt = new MetricPingThread(bornWorker, this);
+//            HeartbeatThread hbt = new HeartbeatThread(worker, this);
             Thread thread = new Thread(hbt);
             thread.start();
             unbornMachines--;
@@ -152,6 +215,22 @@ public class RedirectRequest implements HttpHandler{
         public int compare(Worker o1, Worker o2) {
             return o1.getWorkload() - o2.getWorkload();
         }
+    }
+
+    private Map<String, String> queryToMap(String query) {
+        Map<String, String> result = new HashMap<String, String>();
+        if (query == null || query.length() == 0) {
+            return result;
+        }
+        for (String param : query.split("&")) {
+            String pair[] = param.split("=");
+            if (pair.length>1) {
+                result.put(pair[0], pair[1]);
+            }else{
+                result.put(pair[0], "");
+            }
+        }
+        return result;
     }
 }
 

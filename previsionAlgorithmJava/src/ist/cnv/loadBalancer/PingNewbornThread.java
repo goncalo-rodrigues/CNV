@@ -16,6 +16,7 @@ public class PingNewbornThread implements Runnable {
     private final Worker worker;
     private RedirectRequest handler;
     private final static int PING_PERIOD = 1000;
+    private final static int PING_TIMEOUT = 10000;
     public PingNewbornThread(final Worker worker, RedirectRequest handler) {
         this.worker = worker;
         this.handler = handler;
@@ -25,16 +26,18 @@ public class PingNewbornThread implements Runnable {
     public void run() {
         boolean isDone = false;
         while (!isDone) {
+            System.out.println("Pinging a newborn... " +  worker.getAddress());
             try {
-                URL ws = new URL(new URL("http://" + worker.getAddress()), "ping");
+                URL ws = new URL(new URL("http://" + worker.getAddress()), "metrics");
                 HttpURLConnection wsc = (HttpURLConnection) ws.openConnection();
+                wsc.setConnectTimeout(PING_TIMEOUT);
                 String responseBody = getResponse(wsc.getInputStream());
-                if (responseBody.length() > 0) {
+                if (responseBody.length() >= 0) {
                     isDone = true;
                 }
 
             } catch (Exception e) {
-                // still unborn
+                System.out.println(e.toString());
             }
 
             try {

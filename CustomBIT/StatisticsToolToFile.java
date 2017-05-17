@@ -187,7 +187,7 @@ public class StatisticsToolToFile
                             caller = (routine.getClassName() + "" + caller).replace("/", "").replace("<", "").replace(">", "");
                         }
 						Instruction[] instructions = routine.getInstructions();
-                        routine.addBefore("StatisticsToolToFile", "dynMethodCount", caller);
+//                        routine.addBefore("StatisticsToolToFile", "dynMethodCount", caller);
                         Method_Info methodInfo = routine.getMethodInfo();
 
 
@@ -212,13 +212,14 @@ public class StatisticsToolToFile
                                 }
 
 								instr.addBefore("StatisticsToolToFile", "dynCallCount", caller + "»" + callee);
+								instr.addBefore("StatisticsToolToFile", "dynMethodCount", callee.replace("/", "").replace("<", "").replace(">", ""));
 							}
 						}
-						for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
-							BasicBlock bb = (BasicBlock) b.nextElement();
-							bb.addBefore("StatisticsToolToFile", "dynInstrCount", new Integer(bb.size()));
-							bb.addBefore("StatisticsToolToFile", "dynMethodBBCount", caller+ " "  + bb.size());
-						}
+//						for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
+//							BasicBlock bb = (BasicBlock) b.nextElement();
+//							bb.addBefore("StatisticsToolToFile", "dynInstrCount", new Integer(bb.size()));
+//							bb.addBefore("StatisticsToolToFile", "dynMethodBBCount", caller+ " "  + bb.size());
+//						}
 					}
 
 //					if(filename.equals("Main.class"))

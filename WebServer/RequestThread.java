@@ -16,7 +16,7 @@ import raytracer.Main;
 
 public class RequestThread implements Runnable {
   private static String statsFilename = "stats.txt";
-  private static boolean debug = false;
+  private static boolean debug = true;
   private HttpExchange t = null;
   private static ArrayList<String> keys;
   public static ConcurrentHashMap<String, Long> requestIdToThreadId = new ConcurrentHashMap<>();
@@ -33,6 +33,7 @@ public class RequestThread implements Runnable {
       Map<String, String> args = queryToMap(query);
       String response = "";
       String rid = null;
+        boolean all_metrics = true;
 
 //      response += "<!doctype html><head></head><body>";
 //      response = String.valueOf(Thread.currentThread().getId());
@@ -74,6 +75,7 @@ public class RequestThread implements Runnable {
                     args.get("sc"), args.get("sr"), args.get("wc"), args.get("wr"), args.get("coff"), args.get("roff")};
 
             raytracer.Main.main(args_rt);
+            if (!all_metrics)
             metric = StatisticsDotMethodTool.getMetricAndUnlock();
             response += String.valueOf(metric) + "\n";
             response += "images/" + outName + "\n";
@@ -96,7 +98,7 @@ public class RequestThread implements Runnable {
       t.getResponseHeaders().set("Content-type", "text/plain");
       t.sendResponseHeaders(200, response.length());
 
-      boolean all_metrics = false;
+
       if (debug && !all_metrics) {
         try {
           File f = new File(statsFilename);
@@ -120,7 +122,7 @@ public class RequestThread implements Runnable {
 
           try {
               File f = new File(statsFilename);
-              HashMap<String, BigInteger> methodMap = StatisticsToolToFile.getMethodInstrMap();
+              HashMap<String, BigInteger> methodMap = StatisticsToolToFile.getMethodMap();
               if((!f.exists() && !f.isDirectory()) || keys==null)
               {
                   f.createNewFile();

@@ -38,8 +38,10 @@ public class Worker {
     public void addRequest(String rid, long prevision) {
         synchronized (lock) {
             previsions.put(rid, prevision);
+            workloads.put(rid, prevision);
             workload+=prevision;
         }
+        System.out.println("Workload of " + id + " updated to " + workload);
     }
 
     public void removeRequest(String rid) {
@@ -47,17 +49,19 @@ public class Worker {
             workload-=workloads.get(rid);
             previsions.remove(rid);
         }
-
+        System.out.println("Workload of " + id + " updated to " + workload);
     }
 
     public void updateRequest(String rid, long metricSoFar) {
         synchronized (lock) {
             long w = previsions.get(rid);
             long p = w - metricSoFar;
-            workload -= workloads.get(rid);
-            workloads.put(rid, Math.max(0, p));
-            workload += workloads.get(rid);
+            long oldw = workloads.get(rid);
+            long neww = Math.max(0, p);
+            workloads.put(rid, neww);
+            workload += (neww-oldw);
         }
+        System.out.println("Workload of " + id + " updated to " + workload);
     }
 
     public String getAddress(){ return address;}

@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AWSWorkerFactory {
-    public static final String IMAGEID = "ami-42128022"; //TODO replace this with our image name
+    public static final String IMAGEID = "ami-008ceb60"; //TODO replace this with our image name
     public static final String INSTANCETYPE = "t2.micro";
     public static final String SECURITYGROUP = "all";//"default"; //TODO replace this , this was in sdk sample code
 
@@ -53,6 +53,11 @@ public class AWSWorkerFactory {
             System.out.println("ec3 == null");
         }
         RunInstancesResult  result = amazonEC2.runInstances(runInstanceRequest);
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         String id = result.getReservation().getInstances().get(0).getInstanceId();
         DescribeInstancesRequest describeInstanceRequest = new DescribeInstancesRequest().withInstanceIds(id);
         DescribeInstancesResult describeInstanceResult = amazonEC2.describeInstances(describeInstanceRequest);

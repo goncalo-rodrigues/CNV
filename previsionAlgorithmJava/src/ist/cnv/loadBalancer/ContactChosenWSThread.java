@@ -14,24 +14,31 @@ public class ContactChosenWSThread implements Runnable {
     private String serverUrl = null;
     private RedirectRequest handler = null;
     private Worker worker;
+    private long prevision;
     private static int counter = 0;
+    private String f;
+    private int sc,sr,wc,wr,coff,roff;
 
+    public void setParameters(String f, int sc, int sr, int wc, int wr, int coff, int roff) {
+        this.f=f;this.sc=sc;this.sr=sr;this.wc=wc;this.wr=wr;this.coff=coff;this.roff=roff;
+    }
 
-    public ContactChosenWSThread(HttpExchange httpEx, Worker worker, RedirectRequest handler) {
+    public ContactChosenWSThread(HttpExchange httpEx, Worker worker, RedirectRequest handler, long prevision) {
         this.httpEx = httpEx;
         this.serverUrl = worker.getFullAddress();
         this.handler = handler;
         this.worker = worker;
+        this.prevision = prevision;
     }
 
     public void run() {
         String query = httpEx.getRequestURI().getQuery();
-        String request = serverUrl + query;
+        String request = serverUrl + "?" + query;
+        System.out.println(query);
         String responseBody = null;
         String rid = String.valueOf(counter++);
         try {
-            // todo: compute prevision
-            worker.addRequest(rid, 0);
+            worker.addRequest(rid, prevision);
             URL ws = new URL(request);
             HttpURLConnection wsc = (HttpURLConnection) ws.openConnection();
             // set timeout??
@@ -48,27 +55,34 @@ public class ContactChosenWSThread implements Runnable {
 //                    responseBody = "There was an error while processing the request!";
 //                    httpEx.sendResponseHeaders(500, responseBody.length());
                 // try again, maybe remove this machine?
+                System.out.println("responseBody==null");
                 handler.removeWorker(worker);
                 handler.handle(httpEx);
             }
             else {
                 try {
-                    httpEx.sendResponseHeaders(200, responseBody.length());
+
 
                     String[] values = responseBody.split("\n");
                     String response = "<!doctype html><head></head><body>";
                     if (values.length >= 2) {
-                        long metric = Long.parseLong(values[0]);
-                        // TODO: use this metric to update table, possibly in a background thread
-                        String imageUrl = values[1];
-                        URL mergedUrl = new URL(new URL(serverUrl), imageUrl);
-                        response += "Metric:" + metric + "<br>";
-                        response += "<br> <a href=\"images/"+ mergedUrl + "\">See image here</a>";
+                        try {
+                            long metric = Long.parseLong(values[0]);
+                            String imageUrl = values[1];
+                            URL mergedUrl = new URL(new URL(serverUrl), imageUrl);
+                            response += "Metric:" + metric + "<br>";
+                            response += "<br> <a href=\"" + mergedUrl + "\">See image here</a>";
+                            handler.update(f,sc,sr,wc,wr,coff,roff,metric);
+                        } catch (NumberFormatException e) {
+                            response += responseBody;
+                        }
+
                     } else {
-                        response += "Something went wrong.";
+                        response += "Something went wrong.\n" + responseBody;
                     }
 
                     response += "</body></html>";
+                    httpEx.sendResponseHeaders(200, response.length());
                     httpEx.getResponseHeaders().set("Content-type", "text/html");
                     OutputStream os = httpEx.getResponseBody();
                     os.write(response.getBytes());
