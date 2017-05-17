@@ -77,13 +77,13 @@ public class AWSWorkerFactory {
                 if(instance.getInstanceStatus().getStatus().equals("ok")&&
                         instance.getInstanceState().getName().equals("running") )
                     okIds.add(instance.getInstanceId());
-
-        DescribeInstancesRequest describeInstanceRequest = new DescribeInstancesRequest().withInstanceIds(okIds);
-        DescribeInstancesResult describeInstanceResult = amazonEC2.describeInstances(describeInstanceRequest);
-        for(Reservation r: describeInstanceResult.getReservations()){
-            workers.add(new Worker(r.getInstances().get(0).getInstanceId(),r.getInstances().get(0).getPublicDnsName()));
+        if(okIds.size() >0) {
+            DescribeInstancesRequest describeInstanceRequest = new DescribeInstancesRequest().withInstanceIds(okIds);
+            DescribeInstancesResult describeInstanceResult = amazonEC2.describeInstances(describeInstanceRequest);
+            for (Reservation r : describeInstanceResult.getReservations()) {
+                workers.add(new Worker(r.getInstances().get(0).getInstanceId(), r.getInstances().get(0).getPublicDnsName()));
+            }
         }
-
         System.out.println("Got already on workers:");
         for(Worker worker: workers){
             System.out.println(worker);
@@ -137,8 +137,8 @@ public class AWSWorkerFactory {
 
     public static void main(String[] args){
         AWSWorkerFactory factory = new AWSWorkerFactory();
-        /*Worker worker1 = factory.createWorker();
-        factory.createWorker();
+        Worker worker1 = factory.createWorker();
+        /*factory.createWorker();
         System.out.println("CREATED  instanceid: "+worker1.getId()+" address:"+worker1.getAddress());
         while(!factory.isWorkerReady(worker1)) {
             System.out.println("instanceid = "+worker1.getId()+" NOT READY");
@@ -149,11 +149,8 @@ public class AWSWorkerFactory {
             }
         }*/
         ArrayList<Worker> workers =  factory.getWorkersFromRunningInstances();
-        for(Worker worker: workers){
-            System.out.println(worker);
-        }
-
-        //factory.terminateAllWorkers();
+        factory.terminateAllWorkers();
+        ArrayList<Worker> workers2 =  factory.getWorkersFromRunningInstances();
         System.out.println("finished");
     }
 
