@@ -223,7 +223,11 @@ public class RedirectRequest implements HttpHandler{
     private class WorkerComparator implements Comparator<Worker> {
         @Override
         public int compare(Worker o1, Worker o2) {
-            return o1.getWorkload() - o2.getWorkload();
+            long w1 = o1.getWorkload();
+            long w2 = o2.getWorkload();
+            if (w1 > w2) return 1;
+            if (w1 == w2) return 0;
+            return -1;
         }
     }
 
