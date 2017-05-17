@@ -74,7 +74,8 @@ public class AWSWorkerFactory {
 
         if(result.getInstanceStatuses()!=null && result.getInstanceStatuses().size()!=0)
             for (InstanceStatus instance : result.getInstanceStatuses())
-                if(instance.getInstanceStatus().getStatus().equals("ok"))
+                if(instance.getInstanceStatus().getStatus().equals("ok")&&
+                        instance.getInstanceState().getName().equals("running") )
                     okIds.add(instance.getInstanceId());
 
         DescribeInstancesRequest describeInstanceRequest = new DescribeInstancesRequest().withInstanceIds(okIds);
