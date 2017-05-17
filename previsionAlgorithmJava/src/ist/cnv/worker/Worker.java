@@ -103,4 +103,8 @@ public class Worker {
     public String toString() {
         return "id: " + id + ", address: " + address + ", workload: " + workload ;
     }
+
+    public boolean isEmpty() {
+        return requestThreads.isEmpty();
+    }
 }
