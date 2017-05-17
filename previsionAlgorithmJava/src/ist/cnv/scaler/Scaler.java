@@ -1,5 +1,6 @@
 package ist.cnv.scaler;
 
+import ist.cnv.worker.AWSWorkerFactory;
 import ist.cnv.worker.Worker;
 
 import java.util.List;
@@ -27,13 +28,25 @@ public class Scaler implements Runnable {
                 long shareWork = 0;
                 int nWorkers;
                 long averageWork;
+                Worker lowestMachine = null;
 
                 Thread.sleep(INTERVAL);
 
                 synchronized(workers) {
                     nWorkers = workers.size();
-                    for(Worker w : workers)
-                        shareWork += w.getWorkload();
+
+                    if(nWorkers > 0) {
+                        lowestMachine = workers.get(0);
+                        shareWork = lowestMachine.getWorkload();
+                    }
+
+                    for(int i = 1; i < nWorkers; i++) {
+                        Worker currentMachine = workers.get(i);
+                        if(currentMachine.getWorkload() < lowestMachine.getWorkload())
+                            lowestMachine = currentMachine;
+
+                        shareWork += currentMachine.getWorkload();
+                    }
                 }
 
                 if(nWorkers > 0)
@@ -59,6 +72,8 @@ public class Scaler implements Runnable {
                 if(timesBelow == MINUTES_TO_REDUCE) {
                     timesBelow = 0;
                     System.out.println("It would be time to reduce a machine...");
+                    AWSWorkerFactory factory = new AWSWorkerFactory();
+                    factory.terminateWorker(lowestMachine);
                 }
 
             } catch (InterruptedException e) {
