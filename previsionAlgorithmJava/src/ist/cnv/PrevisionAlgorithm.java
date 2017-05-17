@@ -103,11 +103,12 @@ public class PrevisionAlgorithm {
             }
         }
 
+
         if(nElemetsToChange > 0) {
             costToSplit = requestCost - knownCost;
             if (costToSplit < 0)
                 costToSplit = nElemetsToChange;
-            eachCost = costToSplit/nElemetsToChange;
+            eachCost = (int) Math.round((double)costToSplit/nElemetsToChange);
             for(int x = x1; x <= x2; x++) {
                 for (int y = y1; y <= y2; y++) {
                     if(file.area[y][x] > totalArea){

@@ -22,10 +22,16 @@ public class RedirectRequest implements HttpHandler{
     public RedirectRequest(final List<Worker> workers){
         workerFactory = new AWSWorkerFactory();
         this.workers = workers;
-        for(Worker w : workerFactory.getWorkersFromRunningInstances())
+        for(Worker w : workerFactory.getWorkersFromRunningInstances()) {
             workers.add(w);
+            MetricPingThread hbt = new MetricPingThread(w, this);
+//            HeartbeatThread hbt = new HeartbeatThread(worker, this);
+            Thread thread = new Thread(hbt);
+            thread.start();
+        }
 
-        if (workers.size()==0)
+
+        while (workers.size()+unbornMachines<2)
             createNewWorker();
 
         ArrayList<String> imagesNames = new ArrayList<>();
@@ -98,8 +104,7 @@ public class RedirectRequest implements HttpHandler{
         // Sends the request and waits for the result
         ContactChosenWSThread cct = new ContactChosenWSThread(t, w, this, prevision);
         cct.setParameters(fname,sc,sr,wc,wr,coff,roff);
-        Thread thread = new Thread(cct);
-        thread.start();
+        cct.start();
     }
 
     private void handleError(String s, HttpExchange t) {
@@ -176,6 +181,7 @@ public class RedirectRequest implements HttpHandler{
                     System.out.println("WARNING!! NO MACHINES AVAILABLE! Creating new");
                     noWorkers = true;
                 }
+                worker.interruptAllRequests();
             }
         }
 

@@ -151,6 +151,7 @@ public class AWSWorkerFactory {
         for(Worker worker: workers){
             System.out.println(worker);
         }
+
         //factory.terminateAllWorkers();
         System.out.println("finished");
     }

@@ -1,6 +1,8 @@
 package ist.cnv.worker;
 
 
+import ist.cnv.loadBalancer.ContactChosenWSThread;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -18,7 +20,8 @@ public class Worker {
     private final Object lock = new Object();
     private HashMap<String, Long> workloads = new HashMap<>();
     private HashMap<String, Long> previsions = new HashMap<>();
-    public int workload = 0;
+    private List<ContactChosenWSThread> requestThreads = new ArrayList<>();
+    public long workload = 0;
 
     public Worker(String workerID,String workerAddress){
         id = workerID;
@@ -35,21 +38,32 @@ public class Worker {
         return deleted;
     }
 
-    public void addRequest(String rid, long prevision) {
+    public void addRequest(String rid, long prevision, ContactChosenWSThread thread) {
         synchronized (lock) {
             previsions.put(rid, prevision);
             workloads.put(rid, prevision);
+            requestThreads.add(thread);
             workload+=prevision;
         }
         System.out.println("Workload of " + id + " updated to " + workload);
     }
 
-    public void removeRequest(String rid) {
+    public void removeRequest(String rid, ContactChosenWSThread thread) {
         synchronized (lock) {
             workload-=workloads.get(rid);
             previsions.remove(rid);
+            workloads.remove(rid);
+            requestThreads.remove(thread);
         }
         System.out.println("Workload of " + id + " updated to " + workload);
+    }
+
+    public void interruptAllRequests() {
+
+        for (ContactChosenWSThread thread: requestThreads) {
+            System.out.println("Interrupting request: " + thread.rid);
+            thread.interrupt();
+        }
     }
 
     public void updateRequest(String rid, long metricSoFar) {
@@ -78,11 +92,11 @@ public class Worker {
         return res;
     }
 
-    public int getWorkload(){
+    public long getWorkload(){
         return workload;
     }
 
-    public void setWorkload(int workload){
+    public void setWorkload(long workload){
         this.workload = workload;
     }
 
