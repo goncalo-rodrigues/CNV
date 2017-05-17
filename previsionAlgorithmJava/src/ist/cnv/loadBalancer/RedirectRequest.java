@@ -25,8 +25,7 @@ public class RedirectRequest implements HttpHandler{
         workerFactory = new AWSWorkerFactory();
         this.workers = workers;
         for(Worker w : workerFactory.getWorkersFromRunningInstances()) {
-            workers.add(w);
-            MetricPingThread hbt = new MetricPingThread(w, this);
+            PingNewbornThread hbt = new PingNewbornThread(w, this);
 //            HeartbeatThread hbt = new HeartbeatThread(worker, this);
             Thread thread = new Thread(hbt);
             thread.start();
