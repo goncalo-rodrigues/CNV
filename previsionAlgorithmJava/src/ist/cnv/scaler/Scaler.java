@@ -7,7 +7,9 @@ import java.util.List;
 
 public class Scaler implements Runnable {
     private static final int INTERVAL = 60000; // One minute
-    private static final int MINUTES_TO_REDUCE = 5;
+
+    // TODO: Increase the number to 5 minutes
+    private static final int MINUTES_TO_REDUCE = 1;
     private static final int MAX_LOAD_MACHINE = 5000000; //TODO: put a nonRandom value
 
     private final List<Worker> workers;
@@ -59,7 +61,7 @@ public class Scaler implements Runnable {
                 }
 
                 // TODO: Make this earlier then when it is needed
-                if(averageWork > MAX_LOAD_MACHINE) {
+                if(averageWork > MAX_LOAD_MACHINE * ) {
                     System.out.println("I will need a new machine ASAP!");
                     timesBelow = 0;
                 }
@@ -72,8 +74,22 @@ public class Scaler implements Runnable {
                 if(timesBelow == MINUTES_TO_REDUCE) {
                     timesBelow = 0;
                     System.out.println("It would be time to reduce a machine...");
-                    AWSWorkerFactory factory = new AWSWorkerFactory();
-                    factory.terminateWorker(lowestMachine);
+
+                    if(nWorkers == 1) {
+                        System.out.println("... but I have only one. So ...");
+                        continue;
+                    }
+
+                    nWorkers --;
+                    averageWork = shareWork / nWorkers;
+
+                    if(averageWork > MAX_LOAD_MACHINE) {
+                        System.out.println("If I take one, the system will be overloaded...");
+                        continue;
+                    }
+
+                    // It will wait the work termination before removing the machine
+                    terminateWorkerSafe(lowestMachine);
                 }
 
             } catch (InterruptedException e) {
@@ -81,5 +97,14 @@ public class Scaler implements Runnable {
                 e.printStackTrace();
             }
         }
+    }
+
+    private void terminateWorkerSafe(Worker lowest) {
+        synchronized(workers) {
+            workers.remove(lowest);
+        }
+
+        WaitBeforeRemovingWorker wbrw = new WaitBeforeRemovingWorker(lowest);
+        new Thread(wbrw).start();
     }
 }
