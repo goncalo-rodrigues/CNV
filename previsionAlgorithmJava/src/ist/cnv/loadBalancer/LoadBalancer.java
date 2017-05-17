@@ -1,6 +1,7 @@
 package ist.cnv.loadBalancer;
 
 import com.sun.net.httpserver.HttpServer;
+import ist.cnv.scaler.Scaler;
 import ist.cnv.worker.Worker;
 import javafx.beans.value.WritableObjectValue;
 
@@ -17,5 +18,9 @@ public class LoadBalancer {
         server.createContext("/r.html", new RedirectRequest(workers));
         server.setExecutor(null); // creates a default executor
         server.start();
+
+        // Creates the thread that will be responsible for managing the number of machines
+        Scaler s = new Scaler(workers);
+        new Thread(s).start();
     }
 }
