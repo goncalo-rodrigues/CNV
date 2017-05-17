@@ -16,7 +16,7 @@ public class RedirectRequest implements HttpHandler{
     private Boolean isCreatingWorker =  false;
     private Worker bornWorker = null;
     private AWSWorkerFactory workerFactory;
-    private static final int WORKTHREASHOLD = 500000;//TODO put a nonRandom value
+    private static final int WORKTHREASHOLD = 5000000;//TODO put a nonRandom value
 
     private int unbornMachines = 0;
     private PrevisionAlgorithm oracle;
