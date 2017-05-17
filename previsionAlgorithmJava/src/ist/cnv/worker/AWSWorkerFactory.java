@@ -10,6 +10,9 @@ import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class AWSWorkerFactory {
     public static final String IMAGEID = "ami-42128022"; //TODO replace this with our image name
     public static final String INSTANCETYPE = "t2.micro";
@@ -57,12 +60,55 @@ public class AWSWorkerFactory {
         return new Worker(id,address);
     }
 
+
+    public ArrayList<Worker> getWorkersFromRunningInstances(){
+        DescribeInstanceStatusRequest statusRequest = new DescribeInstanceStatusRequest().withIncludeAllInstances(true);
+        DescribeInstanceStatusResult result = amazonEC2.describeInstanceStatus(statusRequest);
+        ArrayList<String> okIds = new ArrayList<>();
+        ArrayList<Worker> workers = new ArrayList<>();
+
+        if(result.getInstanceStatuses()!=null && result.getInstanceStatuses().size()!=0)
+            for (InstanceStatus instance : result.getInstanceStatuses())
+                if(instance.getInstanceStatus().getStatus().equals("ok"))
+                    okIds.add(instance.getInstanceId());
+
+        DescribeInstancesRequest describeInstanceRequest = new DescribeInstancesRequest().withInstanceIds(okIds);
+        DescribeInstancesResult describeInstanceResult = amazonEC2.describeInstances(describeInstanceRequest);
+        for(Reservation r: describeInstanceResult.getReservations()){
+            workers.add(new Worker(r.getInstances().get(0).getInstanceId(),r.getInstances().get(0).getPublicDnsName()));
+        }
+
+        return  workers;
+    }
+
+
+
     public void terminateWorker(Worker worker){
         String instanceID = worker.getId();
         TerminateInstancesRequest terminateRequest = new TerminateInstancesRequest();
         terminateRequest.withInstanceIds(instanceID);
         amazonEC2.terminateInstances(terminateRequest);
     }
+
+    public void terminateAllWorkers(){
+        DescribeInstanceStatusRequest statusRequest = new DescribeInstanceStatusRequest().withIncludeAllInstances(true);
+        DescribeInstanceStatusResult result = amazonEC2.describeInstanceStatus(statusRequest);
+        List<String> workerIds = new ArrayList<>();
+
+        if(result.getInstanceStatuses()!=null && result.getInstanceStatuses().size()!=0) {
+            for (InstanceStatus instance : result.getInstanceStatuses()) {
+                workerIds.add(instance.getInstanceId());
+            }
+        }
+        if(workerIds.size()>0){
+            TerminateInstancesRequest terminateRequest = new TerminateInstancesRequest();
+            terminateRequest.withInstanceIds(workerIds);
+            amazonEC2.terminateInstances(terminateRequest);
+        }
+    }
+
+
+
 
     public boolean isWorkerReady(Worker worker){
         String instanceID = worker.getId();
@@ -80,7 +126,8 @@ public class AWSWorkerFactory {
 
     public static void main(String[] args){
         AWSWorkerFactory factory = new AWSWorkerFactory();
-        Worker worker1 = factory.createWorker();
+        /*Worker worker1 = factory.createWorker();
+        factory.createWorker();
         System.out.println("CREATED  instanceid: "+worker1.getId()+" address:"+worker1.getAddress());
         while(!factory.isWorkerReady(worker1)) {
             System.out.println("instanceid = "+worker1.getId()+" NOT READY");
@@ -89,8 +136,12 @@ public class AWSWorkerFactory {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+        }*/
+        ArrayList<Worker> workers =  factory.getWorkersFromRunningInstances();
+        for(Worker worker: workers){
+            System.out.println(worker);
         }
-        factory.terminateWorker(worker1);
+        //factory.terminateAllWorkers();
         System.out.println("finished");
     }
 
