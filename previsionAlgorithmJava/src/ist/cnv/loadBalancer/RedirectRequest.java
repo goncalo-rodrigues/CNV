@@ -14,7 +14,6 @@ import java.util.*;
 public class RedirectRequest implements HttpHandler{
     private final List<Worker> workers;
     private Boolean isCreatingWorker =  false;
-    private Worker bornWorker = null;
     private AWSWorkerFactory workerFactory;
     private static final int WORKTHREASHOLD = 5000000;//TODO put a nonRandom value
 
@@ -165,22 +164,11 @@ public class RedirectRequest implements HttpHandler{
     public void createNewWorker(){
         if (unbornMachines == 0) {
             isCreatingWorker = true;
-            bornWorker = workerFactory.createWorker();
+            Worker bornWorker = workerFactory.createWorker();
             PingNewbornThread pnt = new PingNewbornThread(bornWorker, this);
             Thread thread = new Thread(pnt);
             thread.start();
             unbornMachines++;
-        }
-    }
-
-    private void updateWorkersState(){
-    //TODO check if all still alive
-        if(isCreatingWorker && bornWorker!=null) {
-            if (workerFactory.isWorkerReady(bornWorker)) {
-                workers.add(bornWorker);
-                isCreatingWorker = false;
-                bornWorker = null;
-            }
         }
     }
 

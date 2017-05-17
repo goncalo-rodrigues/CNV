@@ -10,7 +10,7 @@ public class Scaler implements Runnable {
 
     // TODO: Increase the number to 5 minutes
     private static final int MINUTES_TO_REDUCE = 1;
-    public static final int MAX_LOAD_MACHINE = 5000000; //TODO: put a nonRandom value
+    public static final int MAX_LOAD_MACHINE = 500000000; //TODO: put a nonRandom value
     private static final float INCREASE_THRESHOLD = (float) 0.8;
     private static final int MAX_NR_MACHINES = 10;
 
