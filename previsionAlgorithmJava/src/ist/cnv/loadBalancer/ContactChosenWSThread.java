@@ -61,7 +61,13 @@ public class ContactChosenWSThread extends Thread {
 //                    httpEx.sendResponseHeaders(500, responseBody.length());
                 // try again, maybe remove this machine?
                 System.out.println("responseBody==null");
-                handler.handle(httpEx);
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        handler.handle(httpEx);
+                    }
+                }).start();
+
             }
             else {
                 try {
@@ -98,7 +104,7 @@ public class ContactChosenWSThread extends Thread {
 
         }
         worker.removeRequest(rid, this);
-        if (worker.getWorkload()==0 && worker.isDeleted()) {
+        if (worker.isEmpty() && worker.isDeleted()) {
             handler.terminateWorker(worker);
         }
     }

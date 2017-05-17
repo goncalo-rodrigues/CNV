@@ -10,9 +10,9 @@ public class Scaler implements Runnable {
 
     // TODO: Increase the number to 5 minutes
     private static final int MINUTES_TO_REDUCE = 1;
-    private static final int MAX_LOAD_MACHINE = 5000000; //TODO: put a nonRandom value
+    public static final int MAX_LOAD_MACHINE = 5000000; //TODO: put a nonRandom value
     private static final float INCREASE_THRESHOLD = (float) 0.8;
-    private static final int MAX_NR_MACHINES = 3;
+    private static final int MAX_NR_MACHINES = 10;
 
     private final List<Worker> workers;
     private final RedirectRequest loadBalancer;
@@ -69,7 +69,8 @@ public class Scaler implements Runnable {
                     System.out.println("I will need a new machine ASAP!");
                     timesBelow = 0;
 
-                    increaseNrMachines();
+                    if(nWorkers != MAX_NR_MACHINES)
+                        increaseNrMachines();
                 }
 
                 else {
@@ -78,7 +79,7 @@ public class Scaler implements Runnable {
                 }
 
                 if(timesBelow == MINUTES_TO_REDUCE) {
-                    timesBelow = 0;
+                    timesBelow --;
                     System.out.println("It would be time to reduce a machine...");
 
                     if(nWorkers == 1) {
@@ -87,7 +88,7 @@ public class Scaler implements Runnable {
                     }
 
                     nWorkers --;
-                    averageWork = shareWork / nWorkers;
+                    averageWork = (shareWork - lowestMachine.getWorkload()) / nWorkers;
 
                     if(averageWork > MAX_LOAD_MACHINE) {
                         System.out.println("If I take one, the system will be overloaded...");

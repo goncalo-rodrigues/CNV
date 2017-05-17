@@ -18,6 +18,10 @@ public class WaitBeforeRemovingWorkerThread implements Runnable {
 
     @Override
     public void run() {
-        rr.killWorker(toTerminate);
+        try {
+            rr.killWorker(toTerminate);
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
     }
 }

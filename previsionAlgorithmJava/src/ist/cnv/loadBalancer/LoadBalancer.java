@@ -24,7 +24,7 @@ public class LoadBalancer {
         server.start();
 
         // Creates the thread that will be responsible for managing the number of machines
-//        Scaler s = new Scaler(workers, rr);
-//        new Thread(s).start();
+        Scaler s = new Scaler(workers, rr);
+        new Thread(s).start();
     }
 }

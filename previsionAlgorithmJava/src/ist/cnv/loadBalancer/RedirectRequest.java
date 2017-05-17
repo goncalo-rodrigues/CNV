@@ -3,6 +3,7 @@ package ist.cnv.loadBalancer;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import ist.cnv.PrevisionAlgorithm;
+import ist.cnv.scaler.Scaler;
 import ist.cnv.worker.AWSWorkerFactory;
 import ist.cnv.worker.Worker;
 
@@ -16,6 +17,7 @@ public class RedirectRequest implements HttpHandler{
     private Worker bornWorker = null;
     private AWSWorkerFactory workerFactory;
     private static final int WORKTHREASHOLD = 5000000;//TODO put a nonRandom value
+
     private int unbornMachines = 0;
     private PrevisionAlgorithm oracle;
 
@@ -31,7 +33,7 @@ public class RedirectRequest implements HttpHandler{
         }
 
 
-        while (workers.size()+unbornMachines<2)
+        while (workers.size() + unbornMachines < 1)
             createNewWorker();
 
         ArrayList<String> imagesNames = new ArrayList<>();
@@ -84,7 +86,7 @@ public class RedirectRequest implements HttpHandler{
 
         if(numMachines == 0) {
             do {
-                System.out.println("Starting...");
+                System.out.println("Waiting for some machine...");
                 try {
                     Thread.sleep(5000);
                 } catch (InterruptedException e) {
@@ -98,7 +100,16 @@ public class RedirectRequest implements HttpHandler{
             } while (numMachines == 0);
         }
 
-        Worker w = choseWorkerToRequest();
+        Worker w = null;
+        while((w = choseWorkerToRequest()) == null) {
+            System.out.println("Super loaded!!, waiting");
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
         System.out.println("R Going to: "+ w.getFullAddress());
 
         // Sends the request and waits for the result
@@ -142,6 +153,9 @@ public class RedirectRequest implements HttpHandler{
 
             if (chosenWorker == null) {
                 chosenWorker = workers.get(workers.size()-1);
+                if (chosenWorker.getWorkload() > Scaler.MAX_LOAD_MACHINE) {
+                    return null;
+                }
             }
         }
         return chosenWorker;
@@ -199,7 +213,7 @@ public class RedirectRequest implements HttpHandler{
             }
         }
 
-        if (worker.getWorkload() == 0) {
+        if (worker.isEmpty()) {
             terminateWorker(worker);
         }
     }
