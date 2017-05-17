@@ -28,10 +28,10 @@ public class PrevisionAlgorithm {
     }
 
 
-    public int estimateCost(String fileName, int sc, int sr,
+    public long estimateCost(String fileName, int sc, int sr,
                             int wc, int wr, int coff,int roff){
-        int requestPixels = sr*sc;
-        float propotion = requestPixels / 1600;
+        long requestPixels = sr*sc;
+        double propotion = (double) requestPixels / (double) 1600;
         if(!fileNames.contains(fileName)) {
             files.add(new File(fileName,1, dynamo));
             fileNames.add(fileName);
@@ -40,7 +40,7 @@ public class PrevisionAlgorithm {
 
         for(File file:files)
             if(file.name.equals(fileName))
-                return (int) (propotion *(float) estimateCost(coords.get(0)[0] , coords.get(0)[1] ,
+                return (long) (propotion * estimateCost(coords.get(0)[0] , coords.get(0)[1] ,
                         coords.get(1)[0] , coords.get(1)[1],file) );//TODO fix
         return 0;
     }
