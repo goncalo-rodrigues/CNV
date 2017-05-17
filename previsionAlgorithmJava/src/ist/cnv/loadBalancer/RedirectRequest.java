@@ -37,13 +37,13 @@ public class RedirectRequest implements HttpHandler{
             createNewWorker();
 
         ArrayList<String> imagesNames = new ArrayList<>();
-        imagesNames.add("test01");
+        imagesNames.add("test01.txt");
 
         oracle = new PrevisionAlgorithm(imagesNames);
-        oracle.addFile("test02", 0.56942257);
-        oracle.addFile("test03", 0.74359062);
-        oracle.addFile("test04", 0.11292513);
-        oracle.addFile("test05", 0.21124866);
+        oracle.addFile("test02.txt", 0.56942257);
+        oracle.addFile("test03.txt", 0.74359062);
+        oracle.addFile("test04.txt", 0.11292513);
+        oracle.addFile("test05.txt", 0.21124866);
     }
 
     @Override
