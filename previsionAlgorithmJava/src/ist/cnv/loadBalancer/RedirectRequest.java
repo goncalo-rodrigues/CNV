@@ -31,7 +31,7 @@ public class RedirectRequest implements HttpHandler{
         }
 
 
-        while (workers.size()+unbornMachines<2)
+        while (workers.size() + unbornMachines < 1)
             createNewWorker();
 
         ArrayList<String> imagesNames = new ArrayList<>();
