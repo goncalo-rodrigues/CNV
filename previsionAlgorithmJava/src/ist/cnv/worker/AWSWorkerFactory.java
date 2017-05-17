@@ -83,6 +83,11 @@ public class AWSWorkerFactory {
             workers.add(new Worker(r.getInstances().get(0).getInstanceId(),r.getInstances().get(0).getPublicDnsName()));
         }
 
+        System.out.println("Got already on workers:");
+        for(Worker worker: workers){
+            System.out.println(worker);
+        }
+
         return  workers;
     }
 

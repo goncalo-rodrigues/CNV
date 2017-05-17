@@ -9,7 +9,6 @@ import ist.cnv.worker.Worker;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class RedirectRequest implements HttpHandler{
     private final List<Worker> workers;
@@ -22,8 +21,13 @@ public class RedirectRequest implements HttpHandler{
 
     public RedirectRequest(final List<Worker> workers){
         workerFactory = new AWSWorkerFactory();
-        createNewWorker();
         this.workers = workers;
+        for(Worker w : workerFactory.getWorkersFromRunningInstances())
+            workers.add(w);
+
+        if (workers.size()==0)
+            createNewWorker();
+
         ArrayList<String> imagesNames = new ArrayList<>();
         imagesNames.add("test01");
 
