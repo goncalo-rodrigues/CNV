@@ -11,16 +11,20 @@ import java.util.List;
 
 public class LoadBalancer {
     private static final List<Worker> workers = new ArrayList<>();
+    private static RedirectRequest rr;
+
     public static void main(String[] args) throws Exception {
 
         // TODO: Must use port 80, changed for testing purposes
         HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
-        server.createContext("/r.html", new RedirectRequest(workers));
+
+        rr = new RedirectRequest(workers);
+        server.createContext("/r.html", rr);
         server.setExecutor(null); // creates a default executor
         server.start();
 
         // Creates the thread that will be responsible for managing the number of machines
-        Scaler s = new Scaler(workers);
+        Scaler s = new Scaler(workers, rr);
         new Thread(s).start();
     }
 }

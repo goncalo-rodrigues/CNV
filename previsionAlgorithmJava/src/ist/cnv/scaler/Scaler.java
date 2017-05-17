@@ -1,5 +1,6 @@
 package ist.cnv.scaler;
 
+import ist.cnv.loadBalancer.RedirectRequest;
 import ist.cnv.worker.Worker;
 
 import java.util.List;
@@ -13,10 +14,12 @@ public class Scaler implements Runnable {
     private static final float INCREASE_THRESHOLD = (float) 0.8;
 
     private final List<Worker> workers;
+    private final RedirectRequest loadBalancer;
     private int timesBelow = 0;
 
-    public Scaler(List<Worker> workers) {
+    public Scaler(List<Worker> workers, RedirectRequest loadBalancer) {
         this.workers = workers;
+        this.loadBalancer = loadBalancer;
     }
 
     @Override
@@ -78,7 +81,7 @@ public class Scaler implements Runnable {
                     System.out.println("It would be time to reduce a machine...");
 
                     if(nWorkers == 1) {
-                        System.out.println("... but I have only one. So ...");
+                        System.out.println("...but I have only one. So...");
                         continue;
                     }
 
@@ -102,16 +105,11 @@ public class Scaler implements Runnable {
     }
 
     private void terminateWorkerSafe(Worker lowest) {
-        synchronized(workers) {
-            workers.remove(lowest);
-        }
-
-        WaitBeforeRemovingWorkerThread wbrw = new WaitBeforeRemovingWorkerThread(lowest);
+        WaitBeforeRemovingWorkerThread wbrw = new WaitBeforeRemovingWorkerThread(lowest, loadBalancer);
         new Thread(wbrw).start();
     }
 
     private void increaseNrMachines() {
-        NewMachineThread nmt = new NewMachineThread(workers);
-        new Thread(nmt).start();
+        loadBalancer.createNewWorker();
     }
 }

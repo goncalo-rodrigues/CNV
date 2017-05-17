@@ -143,7 +143,7 @@ public class RedirectRequest implements HttpHandler{
 
     }
 
-    private void createNewWorker(){
+    public void createNewWorker(){
         if (unbornMachines == 0) {
             isCreatingWorker = true;
             bornWorker = workerFactory.createWorker();

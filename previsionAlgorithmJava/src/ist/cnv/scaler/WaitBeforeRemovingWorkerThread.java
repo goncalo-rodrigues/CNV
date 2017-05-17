@@ -1,5 +1,6 @@
 package ist.cnv.scaler;
 
+import ist.cnv.loadBalancer.RedirectRequest;
 import ist.cnv.worker.AWSWorkerFactory;
 import ist.cnv.worker.Worker;
 
@@ -8,22 +9,15 @@ import ist.cnv.worker.Worker;
  */
 public class WaitBeforeRemovingWorkerThread implements Runnable {
     private Worker toTerminate;
+    private RedirectRequest rr;
 
-    public WaitBeforeRemovingWorkerThread(Worker toTerminate) {
+    public WaitBeforeRemovingWorkerThread(Worker toTerminate, RedirectRequest rr) {
         this.toTerminate = toTerminate;
+        this.rr = rr;
     }
 
     @Override
     public void run() {
-        while(toTerminate.getWorkload() != 0) {
-            try {
-                Thread.sleep(1);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-        AWSWorkerFactory factory = new AWSWorkerFactory();
-        factory.terminateWorker(toTerminate);
+        rr.killWorker(toTerminate);
     }
 }
