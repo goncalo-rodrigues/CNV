@@ -29,6 +29,7 @@ public class RedirectRequest implements HttpHandler{
 //            HeartbeatThread hbt = new HeartbeatThread(worker, this);
             Thread thread = new Thread(hbt);
             thread.start();
+            unbornMachines++;
         }
 
 
