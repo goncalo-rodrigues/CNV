@@ -58,12 +58,12 @@ public class PrevisionAlgorithm {
 
 
     public void insertData(String fileName, int sc, int sr,
-                            int wc, int wr, int coff,int roff,int cost){
+                            int wc, int wr, int coff,int roff,long cost){
         int requestPixels = sr*sc;
         float propotion = requestPixels / 1600;
         boolean changed;
 
-        List<int[]> coords = new FastMatrixEstimator((long)cost , sr,  sc, wr, wc, roff, coff).getTransformedRequest();
+        List<int[]> coords = new FastMatrixEstimator(cost , sr,  sc, wr, wc, roff, coff).getTransformedRequest();
 
         if(!fileNames.contains(fileName)){
             files.add(new File(fileName,1,dynamo));

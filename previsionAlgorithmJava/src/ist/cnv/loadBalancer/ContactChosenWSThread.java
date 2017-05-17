@@ -14,14 +14,21 @@ public class ContactChosenWSThread implements Runnable {
     private String serverUrl = null;
     private RedirectRequest handler = null;
     private Worker worker;
+    private long prevision;
     private static int counter = 0;
+    private String f;
+    private int sc,sr,wc,wr,coff,roff;
 
+    public void setParameters(String f, int sc, int sr, int wc, int wr, int coff, int roff) {
+        this.f=f;this.sc=sc;this.sr=sr;this.wc=wc;this.wr=wr;this.coff=coff;this.roff=roff;
+    }
 
-    public ContactChosenWSThread(HttpExchange httpEx, Worker worker, RedirectRequest handler) {
+    public ContactChosenWSThread(HttpExchange httpEx, Worker worker, RedirectRequest handler, long prevision) {
         this.httpEx = httpEx;
         this.serverUrl = worker.getFullAddress();
         this.handler = handler;
         this.worker = worker;
+        this.prevision = prevision;
     }
 
     public void run() {
@@ -31,8 +38,7 @@ public class ContactChosenWSThread implements Runnable {
         String responseBody = null;
         String rid = String.valueOf(counter++);
         try {
-            // todo: compute prevision
-            worker.addRequest(rid, 0);
+            worker.addRequest(rid, prevision);
             URL ws = new URL(request);
             HttpURLConnection wsc = (HttpURLConnection) ws.openConnection();
             // set timeout??
@@ -62,11 +68,11 @@ public class ContactChosenWSThread implements Runnable {
                     if (values.length >= 2) {
                         try {
                             long metric = Long.parseLong(values[0]);
-                            // TODO: use this metric to update table, possibly in a background thread
                             String imageUrl = values[1];
                             URL mergedUrl = new URL(new URL(serverUrl), imageUrl);
                             response += "Metric:" + metric + "<br>";
                             response += "<br> <a href=\"" + mergedUrl + "\">See image here</a>";
+                            handler.update(f,sc,sr,wc,wr,coff,roff,metric);
                         } catch (NumberFormatException e) {
                             response += responseBody;
                         }
