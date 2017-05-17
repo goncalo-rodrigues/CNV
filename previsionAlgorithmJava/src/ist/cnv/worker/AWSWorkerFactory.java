@@ -67,18 +67,16 @@ public class AWSWorkerFactory {
 
     // FIXME: Terminated instances appear as ready to work!!!
     public ArrayList<Worker> getWorkersFromRunningInstances(){
-        DescribeInstanceStatusRequest statusRequest = new DescribeInstanceStatusRequest().withIncludeAllInstances(true);
+        /*DescribeInstanceStatusRequest statusRequest = new DescribeInstanceStatusRequest().withIncludeAllInstances(true);
         DescribeInstanceStatusResult result = amazonEC2.describeInstanceStatus(statusRequest);
-        ArrayList<String> okIds = new ArrayList<>();
-        ArrayList<Worker> workers = new ArrayList<>();
-
-        /*if(result.getInstanceStatuses()!=null && result.getInstanceStatuses().size()!=0)
+        if(result.getInstanceStatuses()!=null && result.getInstanceStatuses().size()!=0)
             for (InstanceStatus instance : result.getInstanceStatuses())
                 if(instance.getInstanceStatus().getStatus().equals("ok")&&
                         instance.getInstanceState().getName().equals("running") )
                     okIds.add(instance.getInstanceId());*/
 
-
+        ArrayList<String> okIds = new ArrayList<>();
+        ArrayList<Worker> workers = new ArrayList<>();
         DescribeInstancesRequest describeInstanceRequest = new DescribeInstancesRequest().withInstanceIds(okIds);
         DescribeInstancesResult describeInstanceResult = amazonEC2.describeInstances(describeInstanceRequest);
         for (Reservation r : describeInstanceResult.getReservations()) {
