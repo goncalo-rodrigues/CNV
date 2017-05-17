@@ -226,8 +226,7 @@ public class RedirectRequest implements HttpHandler{
         synchronized (workers) {
             System.out.println("Worker came to life " + worker.getAddress());
             workers.add(worker);
-            MetricPingThread hbt = new MetricPingThread(bornWorker, this);
-//            HeartbeatThread hbt = new HeartbeatThread(worker, this);
+            MetricPingThread hbt = new MetricPingThread(worker, this);
             Thread thread = new Thread(hbt);
             thread.start();
             unbornMachines--;
