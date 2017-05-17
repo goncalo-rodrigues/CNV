@@ -72,18 +72,21 @@ public class AWSWorkerFactory {
         ArrayList<String> okIds = new ArrayList<>();
         ArrayList<Worker> workers = new ArrayList<>();
 
-        if(result.getInstanceStatuses()!=null && result.getInstanceStatuses().size()!=0)
+        /*if(result.getInstanceStatuses()!=null && result.getInstanceStatuses().size()!=0)
             for (InstanceStatus instance : result.getInstanceStatuses())
                 if(instance.getInstanceStatus().getStatus().equals("ok")&&
                         instance.getInstanceState().getName().equals("running") )
-                    okIds.add(instance.getInstanceId());
-        if(okIds.size() >0) {
-            DescribeInstancesRequest describeInstanceRequest = new DescribeInstancesRequest().withInstanceIds(okIds);
-            DescribeInstancesResult describeInstanceResult = amazonEC2.describeInstances(describeInstanceRequest);
-            for (Reservation r : describeInstanceResult.getReservations()) {
-                workers.add(new Worker(r.getInstances().get(0).getInstanceId(), r.getInstances().get(0).getPublicDnsName()));
-            }
+                    okIds.add(instance.getInstanceId());*/
+
+
+        DescribeInstancesRequest describeInstanceRequest = new DescribeInstancesRequest().withInstanceIds(okIds);
+        DescribeInstancesResult describeInstanceResult = amazonEC2.describeInstances(describeInstanceRequest);
+        for (Reservation r : describeInstanceResult.getReservations()) {
+            Instance inst = r.getInstances().get(0);
+            if(inst.getState().getName().equals("running"))
+                workers.add(new Worker(inst.getInstanceId(), inst.getPublicDnsName()));
         }
+
         System.out.println("Got already on workers:");
         for(Worker worker: workers){
             System.out.println(worker);
@@ -137,7 +140,7 @@ public class AWSWorkerFactory {
 
     public static void main(String[] args){
         AWSWorkerFactory factory = new AWSWorkerFactory();
-        Worker worker1 = factory.createWorker();
+        //Worker worker1 = factory.createWorker();
         /*factory.createWorker();
         System.out.println("CREATED  instanceid: "+worker1.getId()+" address:"+worker1.getAddress());
         while(!factory.isWorkerReady(worker1)) {
