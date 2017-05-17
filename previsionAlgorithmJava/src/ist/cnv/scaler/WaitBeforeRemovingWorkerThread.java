@@ -6,10 +6,10 @@ import ist.cnv.worker.Worker;
 /**
  * Created on 17-05-2017.
  */
-public class WaitBeforeRemovingWorker implements Runnable {
+public class WaitBeforeRemovingWorkerThread implements Runnable {
     private Worker toTerminate;
 
-    public WaitBeforeRemovingWorker(Worker toTerminate) {
+    public WaitBeforeRemovingWorkerThread(Worker toTerminate) {
         this.toTerminate = toTerminate;
     }
 

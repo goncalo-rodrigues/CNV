@@ -1,6 +1,5 @@
 package ist.cnv.scaler;
 
-import ist.cnv.worker.AWSWorkerFactory;
 import ist.cnv.worker.Worker;
 
 import java.util.List;
@@ -11,6 +10,7 @@ public class Scaler implements Runnable {
     // TODO: Increase the number to 5 minutes
     private static final int MINUTES_TO_REDUCE = 1;
     private static final int MAX_LOAD_MACHINE = 5000000; //TODO: put a nonRandom value
+    private static final float INCREASE_THRESHOLD = (float) 0.8;
 
     private final List<Worker> workers;
     private int timesBelow = 0;
@@ -61,9 +61,11 @@ public class Scaler implements Runnable {
                 }
 
                 // TODO: Make this earlier then when it is needed
-                if(averageWork > MAX_LOAD_MACHINE * ) {
+                if(averageWork > MAX_LOAD_MACHINE * INCREASE_THRESHOLD) {
                     System.out.println("I will need a new machine ASAP!");
                     timesBelow = 0;
+
+                    increaseNrMachines();
                 }
 
                 else {
@@ -104,7 +106,12 @@ public class Scaler implements Runnable {
             workers.remove(lowest);
         }
 
-        WaitBeforeRemovingWorker wbrw = new WaitBeforeRemovingWorker(lowest);
+        WaitBeforeRemovingWorkerThread wbrw = new WaitBeforeRemovingWorkerThread(lowest);
         new Thread(wbrw).start();
+    }
+
+    private void increaseNrMachines() {
+        NewMachineThread nmt = new NewMachineThread(workers);
+        new Thread(nmt).start();
     }
 }
