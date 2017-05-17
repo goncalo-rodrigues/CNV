@@ -199,7 +199,7 @@ public class RedirectRequest implements HttpHandler{
             }
         }
 
-        if (worker.getWorkload() == 0) {
+        if (worker.isEmpty()) {
             terminateWorker(worker);
         }
     }
