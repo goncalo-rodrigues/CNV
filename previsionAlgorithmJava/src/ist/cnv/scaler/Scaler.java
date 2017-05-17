@@ -69,7 +69,8 @@ public class Scaler implements Runnable {
                     System.out.println("I will need a new machine ASAP!");
                     timesBelow = 0;
 
-                    increaseNrMachines();
+                    if(nWorkers != MAX_NR_MACHINES)
+                        increaseNrMachines();
                 }
 
                 else {
@@ -87,7 +88,7 @@ public class Scaler implements Runnable {
                     }
 
                     nWorkers --;
-                    averageWork = shareWork / nWorkers;
+                    averageWork = (shareWork - lowestMachine.getWorkload()) / nWorkers;
 
                     if(averageWork > MAX_LOAD_MACHINE) {
                         System.out.println("If I take one, the system will be overloaded...");
