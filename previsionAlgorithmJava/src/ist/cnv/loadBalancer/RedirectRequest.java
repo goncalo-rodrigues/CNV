@@ -21,6 +21,7 @@ public class RedirectRequest implements HttpHandler{
     public int unbornMachines = 0;
     private PrevisionAlgorithm oracle;
     private AtomicLong pendingLoad = new AtomicLong(0);
+    private AtomicLong receivedLoad = new AtomicLong(0);
 
     public RedirectRequest(final List<Worker> workers){
         workerFactory = new AWSWorkerFactory();
@@ -83,6 +84,7 @@ public class RedirectRequest implements HttpHandler{
 
         prevision = computePrevision(fname, sc,sr,wc,wr,coff,roff);
         pendingLoad.addAndGet(prevision);
+        receivedLoad.addAndGet(Math.min(prevision, Scaler.MAX_LOAD_MACHINE));
         int numMachines = workers.size();
 
         if(numMachines == 0) {
@@ -261,5 +263,7 @@ public class RedirectRequest implements HttpHandler{
     public long getPendingLoad() {
         return pendingLoad.get();
     }
+    public long getReceivedLoad() { return receivedLoad.get();}
+    public void resetReceivedLoad() { receivedLoad = new AtomicLong(0);}
 }
 

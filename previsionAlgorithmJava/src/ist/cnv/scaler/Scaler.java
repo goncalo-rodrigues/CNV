@@ -6,15 +6,16 @@ import ist.cnv.worker.Worker;
 import java.util.List;
 
 public class Scaler implements Runnable {
-//    private static final int INTERVAL = 60000; // One minute
-    private static final int INTERVAL = 5000;
+    private static final int INTERVAL = 60000; // One minute
+//    private static final int INTERVAL = 5000;
 
     // TODO: Increase the number to 5 minutes
     private static final int MINUTES_TO_REDUCE = 5;
     public static final int MAX_LOAD_MACHINE = 50000000; //TODO: put a nonRandom value
+    public static final double MAX_LOAD_MACHINE_SEC = 30;
     private static final float INCREASE_THRESHOLD = (float) 0.8;
     private static final int MAX_NR_MACHINES = 10;
-    private static final float DECREASE_THRESHOLD = (float) 0.1;
+    private static final float DECREASE_THRESHOLD = (float) 0.5;
     private static final double DECAY = 0.5;
 
     private final List<Worker> workers;
@@ -31,17 +32,20 @@ public class Scaler implements Runnable {
         System.out.println("Scaler: Up and running!");
 
         long shareWork = 0;
+        long workFlow = 0;
 
         // It should work until the load balancer instance stops
         while(true) {
             try {
                 int nWorkers;
                 long averageWork;
+                long averageFlow;
                 Worker lowestMachine = null;
 
                 Thread.sleep(INTERVAL);
-                System.out.println("sharework before decay " + shareWork);
+
                 shareWork *= DECAY;
+                workFlow *= DECAY;
                 synchronized(workers) {
                     nWorkers = workers.size() + loadBalancer.unbornMachines;
 
@@ -55,14 +59,21 @@ public class Scaler implements Runnable {
 
                         shareWork += (1-DECAY) * currentMachine.getWorkload();
                     }
-                    System.out.println("sharework after " + shareWork);
 
-                    shareWork += loadBalancer.getPendingLoad();
+
+                    shareWork += (1-DECAY) * loadBalancer.getPendingLoad();
+
+                    workFlow += loadBalancer.getReceivedLoad()*1000*(1-DECAY)*MAX_LOAD_MACHINE_SEC / INTERVAL;
+                    loadBalancer.resetReceivedLoad();
+
                 }
-
+                System.out.println("sharework computed " + shareWork);
+                System.out.println("flow computed " + workFlow);
                 if(nWorkers > 0) {
                     averageWork = shareWork / nWorkers;
+                    averageFlow = workFlow / nWorkers;
                     System.out.println("AVERAGE WORK: " + averageWork);
+                    System.out.println("AVERAGE FLOW: " +  averageFlow);
                 }
 
 
@@ -79,10 +90,14 @@ public class Scaler implements Runnable {
 
                     if(nWorkers != MAX_NR_MACHINES)
                         increaseNrMachines();
-                } else if (averageWork < MAX_LOAD_MACHINE * DECREASE_THRESHOLD) {
+                } else if (averageFlow < MAX_LOAD_MACHINE * DECREASE_THRESHOLD) {
                     System.out.println("I think that I am good for now...");
                     timesBelow ++;
                 }
+//                } else if (lowestMachine.getWorkload() < MAX_LOAD_MACHINE * DECREASE_THRESHOLD) {
+//                    System.out.println("I think that I am good for now...");
+//                    timesBelow ++;
+//                }
                 else {
                     timesBelow = 0;
                 }
