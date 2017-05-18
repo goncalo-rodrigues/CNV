@@ -15,7 +15,7 @@ public class RedirectRequest implements HttpHandler{
     private final List<Worker> workers;
     private Boolean isCreatingWorker =  false;
     private AWSWorkerFactory workerFactory;
-    private static final int WORKTHREASHOLD = 5000000;//TODO put a nonRandom value
+    private static final int WORKTHREASHOLD = 500000;//TODO put a nonRandom value
 
     private int unbornMachines = 0;
     private PrevisionAlgorithm oracle;
@@ -138,7 +138,7 @@ public class RedirectRequest implements HttpHandler{
     }
 
     private Worker choseWorkerToRequest(){
-        System.out.println("->choseWorkerToRequest()");
+
         Worker chosenWorker = null;
         synchronized (workers) {
             //In case that we dont have any worker ready
@@ -151,9 +151,12 @@ public class RedirectRequest implements HttpHandler{
                 }
 
             if (chosenWorker == null) {
-                chosenWorker = workers.get(workers.size()-1);
+
+                chosenWorker = workers.get(0);
                 if (chosenWorker.getWorkload() > Scaler.MAX_LOAD_MACHINE) {
                     return null;
+                } else {
+                    System.out.println("->choseWorkerToRequest() with load " +  chosenWorker.getWorkload() + "against" + workers.get(workers.size()-1).getWorkload());
                 }
             }
         }
@@ -198,6 +201,7 @@ public class RedirectRequest implements HttpHandler{
             if (workers.contains(worker)) {
                 workers.remove(worker);
                 worker.delete();
+                System.out.println("KILLED worker " + worker.getId());
             }
         }
 

@@ -35,7 +35,7 @@ public class ContactChosenWSThread extends Thread {
 
     @Override
     public void run() {
-        rid = String.valueOf(counter++);
+        rid = String.valueOf(System.nanoTime()) + counter++;
         String query = httpEx.getRequestURI().getQuery();
         String request = serverUrl + "?" + query + "&rid=" + rid;
         System.out.println(query);

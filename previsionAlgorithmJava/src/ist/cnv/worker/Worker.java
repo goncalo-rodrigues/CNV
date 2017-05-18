@@ -68,12 +68,17 @@ public class Worker {
 
     public void updateRequest(String rid, long metricSoFar) {
         synchronized (lock) {
-            long w = previsions.get(rid);
-            long p = w - metricSoFar;
-            long oldw = workloads.get(rid);
-            long neww = Math.max(0, p);
-            workloads.put(rid, neww);
-            workload += (neww-oldw);
+            if (previsions.containsKey(rid)) {
+                long w = previsions.get(rid);
+                long p = w - metricSoFar;
+                long oldw = workloads.get(rid);
+                long neww = Math.max(0, p);
+                workloads.put(rid, neww);
+                workload += (neww-oldw);
+            } else {
+                System.out.println("Failed to update request. Request has already been deleted. rid: " + rid);
+            }
+
         }
         System.out.println("Workload of " + id + " updated to " + workload);
     }
