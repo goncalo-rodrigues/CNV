@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.HashMap;
 
 /**
  * Created by goncalo on 16-05-2017.
@@ -17,6 +18,7 @@ public class MetricPingThread implements Runnable {
     private RedirectRequest handler;
     private final static int PING_PERIOD = 5000;
     private final static int PING_TIMEOUT = 10000;
+
     public MetricPingThread(final Worker worker, RedirectRequest handler) {
         this.worker = worker;
         this.handler = handler;

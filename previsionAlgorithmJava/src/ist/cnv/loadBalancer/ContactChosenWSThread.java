@@ -8,6 +8,7 @@ import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
 
 public class ContactChosenWSThread extends Thread {
     private HttpExchange httpEx = null;
@@ -16,10 +17,11 @@ public class ContactChosenWSThread extends Thread {
     private Worker worker;
     private long prevision;
     private static int counter = 0;
-    private String f;
+    public String f;
     private int sc,sr,wc,wr,coff,roff;
     public String rid = "None";
     private HttpURLConnection huc;
+
 
     public void setParameters(String f, int sc, int sr, int wc, int wr, int coff, int roff) {
         this.f=f;this.sc=sc;this.sr=sr;this.wc=wc;this.wr=wr;this.coff=coff;this.roff=roff;

@@ -21,7 +21,17 @@ public class Worker {
     private HashMap<String, Long> workloads = new HashMap<>();
     private HashMap<String, Long> previsions = new HashMap<>();
     private List<ContactChosenWSThread> requestThreads = new ArrayList<>();
+    private HashMap<String, Double> normalizingConstants = new HashMap<>();
     public long workload = 0;
+
+    private HashMap<String, Double> fileNormalizingConstantes = new HashMap<>();
+    {
+        fileNormalizingConstantes.put("test01.txt", 1.);
+        fileNormalizingConstantes.put("test02.txt", 0.56942257);
+        fileNormalizingConstantes.put("test03.txt", 0.74359062);
+        fileNormalizingConstantes.put("test04.txt", 0.11292513);
+        fileNormalizingConstantes.put("test05.txt", 0.21124866);
+    }
 
     public Worker(String workerID,String workerAddress){
         id = workerID;
@@ -43,6 +53,8 @@ public class Worker {
             previsions.put(rid, prevision);
             workloads.put(rid, prevision);
             requestThreads.add(thread);
+            normalizingConstants.put(rid, fileNormalizingConstantes.containsKey(thread.f) ?
+            fileNormalizingConstantes.get(rid) : 1.);
             workload+=prevision;
         }
         System.out.println("Workload of " + id + " updated to " + workload);
@@ -54,6 +66,7 @@ public class Worker {
             previsions.remove(rid);
             workloads.remove(rid);
             requestThreads.remove(thread);
+            normalizingConstants.remove(rid);
         }
         System.out.println("Workload of " + id + " updated to " + workload);
     }
@@ -72,7 +85,7 @@ public class Worker {
         synchronized (lock) {
             if (previsions.containsKey(rid)) {
                 long w = previsions.get(rid);
-                long p = w - metricSoFar;
+                long p = w - (long) ( metricSoFar * normalizingConstants.get(rid));
                 long oldw = workloads.get(rid);
                 long neww = Math.max(0, p);
                 workloads.put(rid, neww);

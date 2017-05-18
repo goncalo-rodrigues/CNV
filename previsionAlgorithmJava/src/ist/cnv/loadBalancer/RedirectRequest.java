@@ -14,9 +14,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class RedirectRequest implements HttpHandler{
     private final List<Worker> workers;
-    private Boolean isCreatingWorker =  false;
     private AWSWorkerFactory workerFactory;
-    private static final int WORKTHREASHOLD = 5000000;//TODO put a nonRandom value
+    private static final int WORKTHREASHOLD = 1000000;//TODO put a nonRandom value
 
     public int unbornMachines = 0;
     private PrevisionAlgorithm oracle;
