@@ -154,10 +154,7 @@ public class RedirectRequest implements HttpHandler{
                     break;
                 }
 
-            if (workers.size() >= 2) {
-                System.out.println("111  " + workers.get(0).workload);
-                System.out.println("222  " + workers.get(1).workload);
-            }
+
             if (chosenWorker == null) {
 
                 chosenWorker = workers.get(workers.size()-1);

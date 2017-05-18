@@ -54,7 +54,7 @@ public class Worker {
             workloads.put(rid, prevision);
             requestThreads.add(thread);
             normalizingConstants.put(rid, fileNormalizingConstantes.containsKey(thread.f) ?
-            fileNormalizingConstantes.get(rid) : 1.);
+            fileNormalizingConstantes.get(thread.f) : 1.);
             workload+=prevision;
         }
         System.out.println("Workload of " + id + " updated to " + workload);
