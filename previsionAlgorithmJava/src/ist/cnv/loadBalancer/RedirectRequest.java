@@ -10,6 +10,7 @@ import ist.cnv.worker.Worker;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class RedirectRequest implements HttpHandler{
     private final List<Worker> workers;
@@ -19,6 +20,7 @@ public class RedirectRequest implements HttpHandler{
 
     private int unbornMachines = 0;
     private PrevisionAlgorithm oracle;
+    private AtomicLong pendingLoad = new AtomicLong(0);
 
     public RedirectRequest(final List<Worker> workers){
         workerFactory = new AWSWorkerFactory();
@@ -80,7 +82,7 @@ public class RedirectRequest implements HttpHandler{
         if (!validated) return;
 
         prevision = computePrevision(fname, sc,sr,wc,wr,coff,roff);
-
+        pendingLoad.addAndGet(prevision);
         int numMachines = workers.size();
 
         if(numMachines == 0) {
@@ -111,6 +113,7 @@ public class RedirectRequest implements HttpHandler{
 
         System.out.println("R Going to: "+ w.getFullAddress());
 
+        pendingLoad.addAndGet(-prevision);
         // Sends the request and waits for the result
         ContactChosenWSThread cct = new ContactChosenWSThread(t, w, this, prevision);
         cct.setParameters(fname,sc,sr,wc,wr,coff,roff);
@@ -250,6 +253,10 @@ public class RedirectRequest implements HttpHandler{
             }
         }
         return result;
+    }
+
+    public long getPendingLoad() {
+        return pendingLoad.get();
     }
 }
 

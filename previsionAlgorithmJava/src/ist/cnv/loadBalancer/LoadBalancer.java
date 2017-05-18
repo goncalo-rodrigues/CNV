@@ -20,7 +20,7 @@ public class LoadBalancer {
 
         rr = new RedirectRequest(workers);
         server.createContext("/r.html", rr);
-        server.setExecutor(null); // creates a default executor
+        server.setExecutor(java.util.concurrent.Executors.newCachedThreadPool()); // creates a default executor
         server.start();
 
         // Creates the thread that will be responsible for managing the number of machines
