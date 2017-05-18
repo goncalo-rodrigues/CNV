@@ -10,16 +10,17 @@ import ist.cnv.worker.Worker;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class RedirectRequest implements HttpHandler{
     private final List<Worker> workers;
     private Boolean isCreatingWorker =  false;
-    private Worker bornWorker = null;
     private AWSWorkerFactory workerFactory;
-    private static final int WORKTHREASHOLD = 5000000;//TODO put a nonRandom value
+    private static final int WORKTHREASHOLD = 500000;//TODO put a nonRandom value
 
     private int unbornMachines = 0;
     private PrevisionAlgorithm oracle;
+    private AtomicLong pendingLoad = new AtomicLong(0);
 
     public RedirectRequest(final List<Worker> workers){
         workerFactory = new AWSWorkerFactory();
@@ -81,7 +82,7 @@ public class RedirectRequest implements HttpHandler{
         if (!validated) return;
 
         prevision = computePrevision(fname, sc,sr,wc,wr,coff,roff);
-
+        pendingLoad.addAndGet(prevision);
         int numMachines = workers.size();
 
         if(numMachines == 0) {
@@ -112,6 +113,7 @@ public class RedirectRequest implements HttpHandler{
 
         System.out.println("R Going to: "+ w.getFullAddress());
 
+        pendingLoad.addAndGet(-prevision);
         // Sends the request and waits for the result
         ContactChosenWSThread cct = new ContactChosenWSThread(t, w, this, prevision);
         cct.setParameters(fname,sc,sr,wc,wr,coff,roff);
@@ -139,7 +141,7 @@ public class RedirectRequest implements HttpHandler{
     }
 
     private Worker choseWorkerToRequest(){
-        System.out.println("->choseWorkerToRequest()");
+
         Worker chosenWorker = null;
         synchronized (workers) {
             //In case that we dont have any worker ready
@@ -152,9 +154,12 @@ public class RedirectRequest implements HttpHandler{
                 }
 
             if (chosenWorker == null) {
-                chosenWorker = workers.get(workers.size()-1);
+
+                chosenWorker = workers.get(0);
                 if (chosenWorker.getWorkload() > Scaler.MAX_LOAD_MACHINE) {
                     return null;
+                } else {
+                    System.out.println("->choseWorkerToRequest() with load " +  chosenWorker.getWorkload() + "against" + workers.get(workers.size()-1).getWorkload());
                 }
             }
         }
@@ -165,22 +170,11 @@ public class RedirectRequest implements HttpHandler{
     public void createNewWorker(){
         if (unbornMachines == 0) {
             isCreatingWorker = true;
-            bornWorker = workerFactory.createWorker();
+            Worker bornWorker = workerFactory.createWorker();
             PingNewbornThread pnt = new PingNewbornThread(bornWorker, this);
             Thread thread = new Thread(pnt);
             thread.start();
             unbornMachines++;
-        }
-    }
-
-    private void updateWorkersState(){
-    //TODO check if all still alive
-        if(isCreatingWorker && bornWorker!=null) {
-            if (workerFactory.isWorkerReady(bornWorker)) {
-                workers.add(bornWorker);
-                isCreatingWorker = false;
-                bornWorker = null;
-            }
         }
     }
 
@@ -210,6 +204,7 @@ public class RedirectRequest implements HttpHandler{
             if (workers.contains(worker)) {
                 workers.remove(worker);
                 worker.delete();
+                System.out.println("KILLED worker " + worker.getId());
             }
         }
 
@@ -258,6 +253,10 @@ public class RedirectRequest implements HttpHandler{
             }
         }
         return result;
+    }
+
+    public long getPendingLoad() {
+        return pendingLoad.get();
     }
 }
 

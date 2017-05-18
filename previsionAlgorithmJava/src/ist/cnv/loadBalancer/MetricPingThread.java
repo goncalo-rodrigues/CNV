@@ -38,7 +38,8 @@ public class MetricPingThread implements Runnable {
                 // ignore
                 System.out.println("Someone interruped me");
             } catch (Exception e) {
-                System.out.println("Machine unreachable " + e.getMessage());
+                System.out.println("Machine unreachable " + e.toString());
+                e.printStackTrace();
                 handler.removeWorker(worker);
                 isDone = true;
             }
