@@ -59,11 +59,13 @@ public class Worker {
     }
 
     public void interruptAllRequests() {
-
-        for (ContactChosenWSThread thread: requestThreads) {
-            System.out.println("Interrupting request: " + thread.rid);
-            thread.interrupt();
+        synchronized (lock) {
+            for (ContactChosenWSThread thread: requestThreads) {
+                System.out.println("Interrupting request: " + thread.rid);
+                thread.interrupt();
+            }
         }
+
     }
 
     public void updateRequest(String rid, long metricSoFar) {

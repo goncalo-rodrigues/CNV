@@ -16,9 +16,9 @@ public class RedirectRequest implements HttpHandler{
     private final List<Worker> workers;
     private Boolean isCreatingWorker =  false;
     private AWSWorkerFactory workerFactory;
-    private static final int WORKTHREASHOLD = 500000;//TODO put a nonRandom value
+    private static final int WORKTHREASHOLD = 5000000;//TODO put a nonRandom value
 
-    private int unbornMachines = 0;
+    public int unbornMachines = 0;
     private PrevisionAlgorithm oracle;
     private AtomicLong pendingLoad = new AtomicLong(0);
 
@@ -153,13 +153,17 @@ public class RedirectRequest implements HttpHandler{
                     break;
                 }
 
+            if (workers.size() >= 2) {
+                System.out.println("111  " + workers.get(0).workload);
+                System.out.println("222  " + workers.get(1).workload);
+            }
             if (chosenWorker == null) {
 
-                chosenWorker = workers.get(0);
+                chosenWorker = workers.get(workers.size()-1);
                 if (chosenWorker.getWorkload() > Scaler.MAX_LOAD_MACHINE) {
                     return null;
                 } else {
-                    System.out.println("->choseWorkerToRequest() with load " +  chosenWorker.getWorkload() + "against" + workers.get(workers.size()-1).getWorkload());
+//                    System.out.println("->choseWorkerToRequest() with load " +  chosenWorker.getWorkload() + "against" + workers.get(workers.size()-1).getWorkload());
                 }
             }
         }
@@ -168,14 +172,13 @@ public class RedirectRequest implements HttpHandler{
     }
 
     public void createNewWorker(){
-        if (unbornMachines == 0) {
-            isCreatingWorker = true;
-            Worker bornWorker = workerFactory.createWorker();
-            PingNewbornThread pnt = new PingNewbornThread(bornWorker, this);
-            Thread thread = new Thread(pnt);
-            thread.start();
-            unbornMachines++;
-        }
+
+        Worker bornWorker = workerFactory.createWorker();
+        PingNewbornThread pnt = new PingNewbornThread(bornWorker, this);
+        Thread thread = new Thread(pnt);
+        thread.start();
+        unbornMachines++;
+
     }
 
 
@@ -233,9 +236,9 @@ public class RedirectRequest implements HttpHandler{
         public int compare(Worker o1, Worker o2) {
             long w1 = o1.getWorkload();
             long w2 = o2.getWorkload();
-            if (w1 > w2) return 1;
+            if (w1 > w2) return -1;
             if (w1 == w2) return 0;
-            return -1;
+            return 1;
         }
     }
 
