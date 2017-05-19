@@ -64,7 +64,7 @@ public class AWSWorkerFactory {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-        } while (address == null);
+        } while (address == null || address.isEmpty());
 
         System.out.println("Created machine with address " + address);
         return new Worker(id,address);

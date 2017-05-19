@@ -26,7 +26,7 @@ public class PingNewbornThread implements Runnable {
     public void run() {
         boolean isDone = false;
         while (!isDone) {
-            System.out.println("Pinging a newborn... " +  worker.getAddress());
+            System.out.println("Pinging a newborn ( " + worker.getId() + " ... " +  worker.getAddress());
             try {
                 URL ws = new URL(new URL("http://" + worker.getAddress()), "metrics");
                 HttpURLConnection wsc = (HttpURLConnection) ws.openConnection();
@@ -37,7 +37,7 @@ public class PingNewbornThread implements Runnable {
                 }
 
             } catch (Exception e) {
-                System.out.println(e.toString());
+                // ignore and try again!
             }
 
             try {

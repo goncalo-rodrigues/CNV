@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class RedirectRequest implements HttpHandler{
     private final List<Worker> workers;
     private AWSWorkerFactory workerFactory;
-    private static final int WORKTHREASHOLD = 1000000;//TODO put a nonRandom value
+    private static final int WORKTHREASHOLD = 5000000;//TODO put a nonRandom value
 
     public int unbornMachines = 0;
     private PrevisionAlgorithm oracle;
@@ -156,12 +156,11 @@ public class RedirectRequest implements HttpHandler{
 
 
             if (chosenWorker == null) {
-
                 chosenWorker = workers.get(workers.size()-1);
                 if (chosenWorker.getWorkload() > Scaler.MAX_LOAD_MACHINE) {
                     return null;
                 } else {
-//                    System.out.println("->choseWorkerToRequest() with load " +  chosenWorker.getWorkload() + "against" + workers.get(workers.size()-1).getWorkload());
+                    System.out.println("No worker below threshold. Choosing the least loaded with load " + chosenWorker.getWorkload());
                 }
             }
         }

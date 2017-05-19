@@ -14,9 +14,9 @@ public class Scaler implements Runnable {
     public static final int MAX_LOAD_MACHINE = 50000000; //TODO: put a nonRandom value
     public static final double MAX_LOAD_MACHINE_SEC = 30;
     private static final float INCREASE_THRESHOLD = (float) 0.8;
-    private static final int MAX_NR_MACHINES = 10;
+    private static final int MAX_NR_MACHINES = 30;
     private static final float DECREASE_THRESHOLD = (float) 0.5;
-    private static final double DECAY = 0.5;
+    private static final double DECAY = 0.2;
 
     private final List<Worker> workers;
     private final RedirectRequest loadBalancer;
@@ -57,7 +57,7 @@ public class Scaler implements Runnable {
                         if(currentMachine.getWorkload() < lowestMachine.getWorkload())
                             lowestMachine = currentMachine;
 
-                        shareWork += (1-DECAY) * currentMachine.getWorkload();
+                        shareWork += (1-DECAY) * Math.min(MAX_LOAD_MACHINE, currentMachine.getWorkload());
                     }
 
 
