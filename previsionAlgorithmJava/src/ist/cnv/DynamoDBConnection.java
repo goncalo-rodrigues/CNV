@@ -18,14 +18,13 @@ import com.amazonaws.services.dynamodbv2.util.TableUtils;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by ant on 09-05-2017.
- */
+
 public class DynamoDBConnection {
     private AmazonDynamoDBClient dynamoDB;
     private DynamoDB dynamo;
     private static String TABLE_NAME = "images";
     private static String TABLE_KEY_NAME = "name";
+
 
     public DynamoDBConnection(){
         AWSCredentials credentials = null;
@@ -50,12 +49,13 @@ public class DynamoDBConnection {
                     .withKeySchema(new KeySchemaElement().withAttributeName(TABLE_KEY_NAME).withKeyType(KeyType.HASH))
                     .withAttributeDefinitions(new AttributeDefinition().withAttributeName(TABLE_KEY_NAME).withAttributeType(ScalarAttributeType.S))
                     .withProvisionedThroughput(new ProvisionedThroughput().withReadCapacityUnits(1L)
-                            .withWriteCapacityUnits(2L));//TODO: The values are for testing. Before delivery, increase.
+                            .withWriteCapacityUnits(2L));
 
             // Create table if it does not exist yet
             TableUtils.createTableIfNotExists(dynamoDB, createTableRequest);
             // wait for the table to move into ACTIVE state
             TableUtils.waitUntilActive(dynamoDB, TABLE_NAME);
+
         } catch (AmazonServiceException ase) {
             System.out.println("Caught an AmazonServiceException, which means your request made it "
                     + "to AWS, but was rejected with an error response for some reason.");
@@ -69,32 +69,27 @@ public class DynamoDBConnection {
         }
     }
 
+
+    //Save the image information in dynamoDB
     public void saveImageData(String name, String cost, String area,double normalizingConstant){
         Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
 
         item.put(TABLE_KEY_NAME, new AttributeValue(name));
         item.put("cost",new AttributeValue(cost));
         item.put("area",new AttributeValue(area));
-
         item.put("normalizingConstant", new AttributeValue(new String(String.valueOf(normalizingConstant))));
-        System.out.println(item);
-        System.out.println(item.keySet());
 
         PutItemRequest putItemRequest = new PutItemRequest(TABLE_NAME,item);
         PutItemResult putItemResult = dynamoDB.putItem(putItemRequest);
-        System.out.println("Result: " + putItemResult);
 
-        /*Table table = dynamo.getTable(TABLE_NAME);
-        Item item = new Item().withString("name", name).withList("cost",cost).withList("area",area);
-        item.withBinarySet("cost",cost);
-        PutItemOutcome result = table.putItem(item);
-        System.out.println(result);*/
-
+        System.out.println(item + "\n" + item.keySet() + "\n" +"Result: " + putItemResult);
     }
 
 
+    //Retrieve the image information from dynamoDB
     public String[] getImageData(String name){
         Table table = dynamo.getTable(TABLE_NAME);
+
         GetItemOutcome outcome = table.getItemOutcome(TABLE_KEY_NAME, name);
         Item item = outcome.getItem();
         if(item == null)

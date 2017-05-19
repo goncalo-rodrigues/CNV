@@ -26,8 +26,7 @@ public class PrevisionAlgorithm {
 
 
     //Estimate the cost of one request
-    public long estimateCost(String fileName, int sc, int sr,
-                            int wc, int wr, int coff,int roff){
+    public long estimateCost(String fileName, int sc, int sr, int wc, int wr, int coff,int roff){
         long requestPixels = sr*sc;
         double propotion = (double) requestPixels / (double) 1600;
         if(!fileNames.contains(fileName)) {
