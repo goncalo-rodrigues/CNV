@@ -85,10 +85,12 @@ public class Worker {
         synchronized (lock) {
             if (previsions.containsKey(rid)) {
                 long w = previsions.get(rid);
+                // load remaining = predicted load - load processed
                 long p = w - (long) ( metricSoFar * normalizingConstants.get(rid));
                 long oldw = workloads.get(rid);
                 long neww = Math.max(0, p);
                 workloads.put(rid, neww);
+                // remove old load and current one
                 workload += (neww-oldw);
             } else {
                 System.out.println("Failed to update request. Request has already been deleted. rid: " + rid);

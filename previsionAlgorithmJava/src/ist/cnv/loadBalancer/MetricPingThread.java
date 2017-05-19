@@ -11,7 +11,8 @@ import java.net.URL;
 import java.util.HashMap;
 
 /**
- * Created by goncalo on 16-05-2017.
+ * This thread continuously pings the workers to check if they are alive
+ * The ping returns all current requests at that machine and their current metric value
  */
 public class MetricPingThread implements Runnable {
     private final Worker worker;

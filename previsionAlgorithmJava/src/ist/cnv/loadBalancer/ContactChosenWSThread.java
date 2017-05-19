@@ -48,7 +48,6 @@ public class ContactChosenWSThread extends Thread {
             URL ws = new URL(request);
             HttpURLConnection wsc = (HttpURLConnection) ws.openConnection();
             huc = wsc;
-            // set timeout??
             responseBody = getResponse(wsc.getInputStream());
         } catch (MalformedURLException e) {
             // Not likely to happen
@@ -59,10 +58,8 @@ public class ContactChosenWSThread extends Thread {
             e.printStackTrace();
         } finally {
             if(responseBody == null) {
-//                    responseBody = "There was an error while processing the request!";
-//                    httpEx.sendResponseHeaders(500, responseBody.length());
-                // try again, maybe remove this machine?
                 System.out.println("responseBody==null");
+                // something went wrong, try again
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -81,6 +78,7 @@ public class ContactChosenWSThread extends Thread {
                         try {
                             long metric = Long.parseLong(values[0]);
                             String imageUrl = values[1];
+                            // change the url to go directly to the machine containing the image
                             URL mergedUrl = new URL(new URL(serverUrl), imageUrl);
                             response += "Metric:" + metric + "<br>";
                             response += "<br> <a href=\"" + mergedUrl + "\">See image here</a>";
@@ -105,7 +103,9 @@ public class ContactChosenWSThread extends Thread {
             }
 
         }
+        // removes the request from the worker's data structures
         worker.removeRequest(rid, this);
+        // if worker is marked for deletion and this is its last request, just terminate it
         if (worker.isEmpty() && worker.isDeleted()) {
             handler.terminateWorker(worker);
         }

@@ -86,6 +86,7 @@ public class RedirectRequest implements HttpHandler{
         receivedLoad.addAndGet(Math.min(prevision, Scaler.MAX_LOAD_MACHINE));
         int numMachines = workers.size();
 
+        // check if there any machines to attend this request
         if(numMachines == 0) {
             do {
                 System.out.println("Waiting for some machine...");
@@ -103,6 +104,7 @@ public class RedirectRequest implements HttpHandler{
         }
 
         Worker w = null;
+        // ask for a worker until a suitable one is found
         while((w = choseWorkerToRequest()) == null) {
             System.out.println("Super loaded!!, waiting");
             try {
@@ -145,8 +147,8 @@ public class RedirectRequest implements HttpHandler{
 
         Worker chosenWorker = null;
         synchronized (workers) {
-            //In case that we dont have any worker ready
-//            updateWorkersState();
+
+            // chooses the worker with the most load that is under a low threshold
             Collections.sort(workers, new WorkerComparator());
             for (Worker w : workers)
                 if (w.getWorkload() < WORKTHREASHOLD) {
@@ -154,9 +156,10 @@ public class RedirectRequest implements HttpHandler{
                     break;
                 }
 
-
+            // if all workers are above the low threshold, just choose the one with the least load
             if (chosenWorker == null) {
                 chosenWorker = workers.get(workers.size()-1);
+                // if all workers are above the MAX threshold, then the request will have to wait
                 if (chosenWorker.getWorkload() > Scaler.MAX_LOAD_MACHINE) {
                     return null;
                 } else {
@@ -178,7 +181,7 @@ public class RedirectRequest implements HttpHandler{
 
     }
 
-
+    // force removes a worker
     public void removeWorker(Worker worker) {
         boolean noWorkers = false;
         synchronized (workers) {
@@ -199,6 +202,7 @@ public class RedirectRequest implements HttpHandler{
         }
     }
 
+    // remove a worker after completing its requests
     public void killWorker(Worker worker) {
         synchronized (workers) {
             if (workers.contains(worker)) {
@@ -213,10 +217,12 @@ public class RedirectRequest implements HttpHandler{
         }
     }
 
+    // ask amazon to terminate
     public void terminateWorker(Worker worker) {
         workerFactory.terminateWorker(worker);
     }
 
+    // this is called when a worker has firstly responded to a ping
     public void spawnWorker(Worker worker) {
         synchronized (workers) {
             System.out.println("Worker came to life " + worker.getAddress());

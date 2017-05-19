@@ -6,16 +6,16 @@ import ist.cnv.worker.Worker;
 import java.util.List;
 
 public class Scaler implements Runnable {
+    // Interval at which the scaler checks if there are needed new machines or reducing
     private static final int INTERVAL = 60000; // One minute
-//    private static final int INTERVAL = 5000;
-
-    // TODO: Increase the number to 5 minutes
+    // How many times of low workload until a machine is reduced
     private static final int MINUTES_TO_REDUCE = 5;
-    public static final int MAX_LOAD_MACHINE = 50000000; //TODO: put a nonRandom value
+    public static final int MAX_LOAD_MACHINE = 50000000;
     public static final double MAX_LOAD_MACHINE_SEC = 30;
     private static final float INCREASE_THRESHOLD = (float) 0.8;
-    private static final int MAX_NR_MACHINES = 30;
+    private static final int MAX_NR_MACHINES = 10;
     private static final float DECREASE_THRESHOLD = (float) 0.5;
+    // workload_t = workload_{t-1}*decay + workload_t*(1-decay)
     private static final double DECAY = 0.2;
 
     private final List<Worker> workers;
@@ -97,10 +97,6 @@ public class Scaler implements Runnable {
                     System.out.println("I think that I am good for now...");
                     timesBelow ++;
                 }
-//                } else if (lowestMachine.getWorkload() < MAX_LOAD_MACHINE * DECREASE_THRESHOLD) {
-//                    System.out.println("I think that I am good for now...");
-//                    timesBelow ++;
-//                }
                 else {
                     timesBelow = 0;
                 }

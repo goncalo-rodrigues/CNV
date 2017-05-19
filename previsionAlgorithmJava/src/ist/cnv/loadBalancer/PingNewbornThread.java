@@ -10,8 +10,11 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 /**
- * Created by goncalo on 16-05-2017.
+ *
+ * This thread pings a newborn worker until he responds
+ *
  */
+
 public class PingNewbornThread implements Runnable {
     private final Worker worker;
     private RedirectRequest handler;
