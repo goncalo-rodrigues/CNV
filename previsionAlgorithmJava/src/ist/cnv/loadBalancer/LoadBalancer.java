@@ -3,8 +3,6 @@ package ist.cnv.loadBalancer;
 import com.sun.net.httpserver.HttpServer;
 import ist.cnv.scaler.Scaler;
 import ist.cnv.worker.Worker;
-import javafx.beans.value.WritableObjectValue;
-
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
