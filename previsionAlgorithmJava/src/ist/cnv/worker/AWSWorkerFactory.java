@@ -86,7 +86,7 @@ public class AWSWorkerFactory {
         DescribeInstancesResult describeInstanceResult = amazonEC2.describeInstances(describeInstanceRequest);
         for (Reservation r : describeInstanceResult.getReservations()) {
             Instance inst = r.getInstances().get(0);
-            if(inst.getState().getName().equals("running"))
+            if(inst.getState().getName().equals("running") && inst.getImageId().equals(IMAGEID))
                 workers.add(new Worker(inst.getInstanceId(), inst.getPublicDnsName()));
         }
 
