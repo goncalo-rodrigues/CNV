@@ -5,7 +5,7 @@ package ist.cnv;
  */
 public class File {
     private static int TSIZE = 40;
-    private static int SAVESUNTILSEND = 5;
+    private static int SAVESUNTILSEND = 15;
     private static int STARTINGCOST = 11; //TODO refine this number see all the images result and get a good etimation
     String name;
     public int[][] cost;
