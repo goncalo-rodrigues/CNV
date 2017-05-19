@@ -87,9 +87,12 @@ public class Scaler implements Runnable {
                 if(averageWork > MAX_LOAD_MACHINE * INCREASE_THRESHOLD) {
                     System.out.println("I will need a new machine ASAP!");
                     timesBelow = 0;
+                    int machinesNeeded = Math.max(1,(int) loadBalancer.getPendingLoad() / MAX_LOAD_MACHINE - loadBalancer.unbornMachines);
+                    for (int i=0; i < machinesNeeded; i++)
+                        if(nWorkers++ < MAX_NR_MACHINES) {
+                            increaseNrMachines();
+                        }
 
-                    if(nWorkers != MAX_NR_MACHINES)
-                        increaseNrMachines();
                 } else if (averageFlow < MAX_LOAD_MACHINE * DECREASE_THRESHOLD) {
                     System.out.println("I think that I am good for now...");
                     timesBelow ++;
@@ -103,7 +106,7 @@ public class Scaler implements Runnable {
                 }
 
                 if(timesBelow == MINUTES_TO_REDUCE) {
-                    timesBelow =0;
+                    timesBelow--;
                     System.out.println("It would be time to reduce a machine...");
 
                     if(nWorkers == 1) {

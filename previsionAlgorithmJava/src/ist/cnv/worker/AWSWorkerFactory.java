@@ -53,15 +53,20 @@ public class AWSWorkerFactory {
             System.out.println("ec3 == null");
         }
         RunInstancesResult  result = amazonEC2.runInstances(runInstanceRequest);
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        String address = null;
         String id = result.getReservation().getInstances().get(0).getInstanceId();
-        DescribeInstancesRequest describeInstanceRequest = new DescribeInstancesRequest().withInstanceIds(id);
-        DescribeInstancesResult describeInstanceResult = amazonEC2.describeInstances(describeInstanceRequest);
-        String address = describeInstanceResult.getReservations().get(0).getInstances().get(0).getPublicDnsName();//TODO check if get ip is best
+        do {
+            try {
+                Thread.sleep(1000);
+                DescribeInstancesRequest describeInstanceRequest = new DescribeInstancesRequest().withInstanceIds(id);
+                DescribeInstancesResult describeInstanceResult = amazonEC2.describeInstances(describeInstanceRequest);
+                address = describeInstanceResult.getReservations().get(0).getInstances().get(0).getPublicDnsName();//TODO check if get ip is best
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        } while (address == null);
+
+        System.out.println("Created machine with address " + address);
         return new Worker(id,address);
     }
 
