@@ -1,16 +1,17 @@
 package ist.cnv;
 
 /**
- * Created by ant on 09-05-2017.
+ * Created on 09-05-2017.
  */
+
 public class File {
-    private static int TSIZE = 40;
-    private static int SAVESUNTILSEND = 15;
-    private static int STARTINGCOST = 11; //TODO refine this number see all the images result and get a good etimation
-    String name;
-    public int[][] cost;
-    public int[][] area;
-    public double normalizingConstant;
+    private static int TSIZE = 40;          // Table size in DB ex: 40x40
+    private static int SAVESUNTILSEND = 15; // The number of updates in the file until send to dynamo
+    private static int STARTINGCOST = 11;   // The predefined cost each square have until we have some information
+    String name;                            // The name of the image file
+    public int[][] cost;                    // The cost of each part of the image
+    public int[][] area;                    // The are wich have the request that make the change in the cost table
+    public double normalizingConstant;      // Relative contant to file 1 in terms of time/Instructions
     DynamoDBConnection dynamoConnection;
 
     private int acumulatedSaves = 0;
@@ -20,17 +21,19 @@ public class File {
         this.name = name;
         this.normalizingConstant = normalizingConstant;
         this.dynamoConnection = dynamoConnection;
-        //TODO check if already exists in DynamoDB
         load();
     }
 
+
     public void load(){
+        //check if the image already exists in the database
         String result[] = dynamoConnection.getImageData(this.name);
         if (result != null) {
             cost = stringToIntList(result[0]);
             area = stringToIntList(result[1]);
             normalizingConstant = Double.parseDouble(result[2]);
         }
+        //if dont exists it create a new one
         else{
             cost = new int[TSIZE][TSIZE];
             area = new int[TSIZE][TSIZE];
@@ -44,6 +47,8 @@ public class File {
         }
     }
 
+
+    //Saves are made periodically
     public void save(){
         acumulatedSaves ++;
         if (acumulatedSaves >= SAVESUNTILSEND) {
@@ -52,6 +57,8 @@ public class File {
         }
     }
 
+
+    //Saves are made periodically, to make it now use this
     public void forceSave(){
         String costString = intListToString(cost);
         String areaString = intListToString(area);
@@ -59,7 +66,7 @@ public class File {
     }
 
 
-
+    //Transform an arraylist in a String to save it in dynamo
     private String intListToString(int[][] intArray){
         String output = "";
         for(int x = 0; x < TSIZE; x++)
@@ -68,6 +75,8 @@ public class File {
         return output;
     }
 
+
+    //Transform an arraylist in String format to real arraylist
     private int[][] stringToIntList(String arrayString){
         int[][] array = new int[TSIZE][TSIZE];
         int i = 0;
@@ -79,6 +88,5 @@ public class File {
             }
         return array;
     }
-
 
 }
