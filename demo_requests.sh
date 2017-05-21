@@ -11,5 +11,5 @@ while true; do
   rnd=$(echo $RANDOM)
   let i=$rnd%2
   curl ${requests[$i]} &
-  sleep 3
+  sleep 5
 done
