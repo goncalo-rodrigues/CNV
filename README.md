@@ -14,3 +14,5 @@ RenderFarm
 * The instrumentation tool's binaries are on BIT/samples
 * The Web Server's binaries are on raytracer-master
 * The raytracers' binaries are on the corresponding directories
+
+For more information about this project, see [FinalReport.pdf](./FinalReport.pdf)
